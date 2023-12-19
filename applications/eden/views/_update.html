@@ -1,0 +1,39 @@
+<div class='row'>
+    <div class='small-12 columns'>
+        {{try:}}{{=H2(title)}}{{except:}}{{pass}}
+    </div>
+</div>
+<div id='rheader' class='row'>
+    <div class='small-12 columns'>
+        {{try:}}{{=XML(rheader)}}
+    </div>
+</div>
+<div id='component' class='row'>
+    {{except:}}
+</div>
+</div>
+<div class='row'>
+    {{pass}}
+    {{try:}}{{if subtitle:}}<div class='small-12 columns'>{{=H3(subtitle)}}</div>{{pass}}{{except:}}{{pass}}
+    <div class='small-12 columns'>
+        {{try:}}{{=buttons["delete_btn"]}}{{except:}}{{pass}}
+        {{try:}}{{=deduplicate}}{{except:}}{{pass}}
+    </div>
+    <div id='map' class='small-12 columns'></div>
+    <div class='small-12 columns'>
+        <div class='form-info'>
+            {{include "last_update.html"}}
+            {{include "key.html"}}
+        </div>
+        <div class='form-container'>
+        <!-- <div class='card-body card-text'> -->
+            {{try:}}{{=form}}{{except:}}{{pass}}
+        </div>
+    </div>
+</div>
+{{if s3.rfooter:}}
+<div id='rfooter' class='row'>
+    <div class='small-12 columns'>
+        {{=XML(s3.rfooter)}}
+    </div>
+</div>{{pass}}

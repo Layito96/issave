@@ -1,0 +1,26 @@
+[uwsgi]
+;uid = web2py
+;gid = web2py
+chdir = /home/{{ type }}/
+module = wsgihandler
+mule = run_scheduler.py
+workers = {{ (type == "prod") | ternary(4,2) }}
+cheap = true
+idle = 1000
+harakiri = 1000
+;pidfile = /var/run/uwsgi/{{ type }}/pid
+;daemonize = /var/log/uwsgi/{{ type }}.log
+{% if type == 'prod' %}
+socket = 127.0.0.1:59025
+{% elif type == 'test' %}
+socket = 127.0.0.1:59026
+{% elif type == 'demo' %}
+socket = 127.0.0.1:59027
+{% elif type == 'setup' %}
+socket = 127.0.0.1:59028
+{% endif %}
+master = true
+{% if web_server == 'nginx' %}
+chmod-socket = 666
+chown-socket = web2py:nginx
+{% endif %}

@@ -1,0 +1,274 @@
+<!DOCTYPE html
+	PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang='{{=T.accepted_language or "en"}}'>
+{{# class="no-js" needed for modernizr }}
+
+<head>
+	{{theme_styles=response.s3.theme_styles}}
+	<meta http-equiv="content-type" content="text/html; charset=utf-8" />
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+	<title>
+		{{try:}}
+		{{=title}}
+		{{except:}}
+		{{=response.title or settings.get_system_name_short()}}
+		{{pass}}
+	</title>
+	{{if response.refresh:}}
+	{{=XML(response.refresh)}}
+	{{pass}}
+
+	<meta name="application-name" content="{{=appname}}" />
+	{{a="""<!--  Mobile Viewport Fix
+			j.mp/mobileviewport & davidbcalhoun.com/2010/viewport-metatag
+			device-width: Occupy full width of the screen in its current orientation
+			initial-scale = 1.0 retains dimensions instead of zooming out if page height > device height
+			maximum-scale = 1.0 retains dimensions instead of zooming in if page width < device width
+			--> """}}
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+	<link rel="shortcut icon" href="/{{=appname}}/static/favicon.ico" type="image/x-icon" />
+	{{for sheet in s3.external_stylesheets:}}
+	<link href="{{=sheet}}" rel="stylesheet" type="text/css" media="screen" charset="utf-8" />
+	{{pass}}
+	{{#include "foundation.css.html"}}
+	{{for sheet in s3.stylesheets:}}
+	<link href="/{{=appname}}/static/styles/{{=sheet}}" rel="stylesheet" type="text/css" media="screen"
+		charset="utf-8" />
+	{{pass}}
+	{{if s3.debug:}}
+	{{=s3base.s3_include_debug_css()}}
+	{{else:}}
+	<link href="/{{=appname}}/static/themes/{{=theme_styles}}/eden.min.css" rel="stylesheet" type="text/css" />
+	{{pass}}
+	{{include "scripts_top.html"}}
+	<!---->
+	{{include "interlinkdesign.css.html"}}
+	{{include "testfoundation.css.html"}}
+	<!---->
+	<!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/themes/default/style.min.css" /> -->
+	<link rel="stylesheet" href="/eden/static/themes/SAFIRE/interlinkdesign/jstree/themes/default/style.min.css" />
+</head>
+{{try:}}
+{{if r.representation == "popup":}}
+{{representation = "popup"}}
+{{elif r.representation == "iframe":}}
+{{representation = "iframe"}}
+{{else:}}
+{{representation = ""}}
+{{pass}}
+{{except:}}
+{{representation = ""}}
+{{pass}}
+{{if representation == "popup":}}
+
+<body class='popup'>
+	{{if response.flash or response.confirmation:}}
+	{{include "layout_popup.html"}}
+	{{else:}}
+	{{include}}
+	{{pass}}
+	{{if s3.debug:}}
+	{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.js"]))}}
+	{{else:}}
+	{{s3.scripts.append(URL(c="static", f="scripts", args=["S3", "s3.popup.min.js"]))}}
+	{{pass}}
+	{{elif representation == "iframe":}}
+	{{include "layout_iframe.html"}}
+	{{include}}
+	{{else:}}
+
+	<body>
+		<div id="wrapper">
+			<div>
+				<div class="container-fluid menulog fixed-top ">
+					<a href="#menu-toggle" id="menu-toggle" class="">
+						<i class="fas fa-bars fa-2x" style="color: white;"></i>
+					</a>
+				</div>
+				<div>
+					<a href="/eden/default/index.html"><img class="logo"
+							src="/{{=appname}}/static/themes/{{=theme_styles}}/interlinkdesign/img/logo.png"
+							style="margin-top:0px"></a>
+				</div>
+			</div>
+			<!-- Sidebar -->
+			{{=current.menu.main}}
+			<div id="page-content-wrapper">
+				<div class="row col-lg-12">
+					<div class="dd hide-item">
+
+						<strong>
+							{{import datetime}}
+							{{now = datetime.datetime.now()}}
+							{{=now.strftime("%d/%m/%Y %H:%M:%S")}}
+						</strong>
+					</div>
+					<div class="big-box">
+						<div class="hide-item">
+							<img class="boxlogo "
+								src="/{{=appname}}/static/themes/{{=theme_styles}}/interlinkdesign/img/logo2.png">
+						</div>
+						<div class="tt">{{try:}} Bonjour {{=auth.user.first_name}}{{except:}}{{pass}}</div>
+						<div class="nn">
+							{{try:}}
+							{{=title}}
+							{{except:}}
+							{{=response.title or settings.get_system_name_short()}}
+							{{pass}}
+						</div>
+
+						<div class="md-form mt-0">
+							<input class="form-control"
+								style="width: 260px; background: gray; opacity: .5; color: white; border-radius: 0px;"
+								type="text" placeholder="Search" aria-label="Search">
+						</div>
+					</div>
+				</div>
+				<div class="row col-lg-12">
+					{{pass}}
+					<!-- sous menu -->
+					{{if current.menu.options is not None:}}
+					{{=current.menu.options}}
+					{{pass}}
+					<div class='row'>
+						<div class='medium-4 medium-centered columns' id='alert-space'>
+							{{if response.error:}}<div class='alert alert-error'>{{=response.error}}</div>{{pass}}
+							{{if response.warning:}}<div class='alert alert-warning'>{{=response.warning}}</div>{{pass}}
+							{{if response.information:}}<div class='alert alert-info'>{{=response.information}}</div>
+							{{pass}}
+							{{if response.confirmation:}}<div class='alert alert-success'>{{=response.confirmation}}
+							</div>{{pass}}
+							{{if response.flash:}}<div class='alert alert-success'>{{=response.flash}}</div>{{pass}}
+						</div>
+					</div>
+					{{include}}
+
+				</div>
+
+				<footer style="position: fixed;bottom: 0;">
+					<div>
+						<img style="float: right; margin-right: 50px; margin-top: 17px;"
+							src="/eden/static/themes/SAFIRE/interlinkdesign/img/fir.png">
+					</div>
+					<div>
+						<img style="float: left; margin-left: 50px; margin-top: 8px;"
+							src="/eden/static/themes/SAFIRE/interlinkdesign/img/fil.png">
+					</div>
+					<div
+						style="margin: 0 auto;max-width: 200px;height: 100px;border-radius: 3px;margin-top: 17px; color:#94530d">
+						Copyright © <a style="color:#ba6811" href="http://interlink.mr/">Interlink</a> 2023.<p></p>
+					</div>
+				</footer>
+
+			</div>
+			<!-- /#wrapper -->
+
+			<!-- Menu Toggle Script -->
+			<script>
+				$("#menu-toggle").click(function (e) {
+					e.preventDefault();
+					$("#wrapper").toggleClass("toggled");
+				});
+			</script>
+
+		</div>
+		<!-- <div class='row' id='footer'> -->
+		<!-- <div class='medium-12 columns'> -->
+		<!-- {{include "../modules/templates/%s/views/footer.html" % response.s3.theme_layouts}} -->
+		<!-- </div> -->
+		<!-- </div> -->
+		<br>
+		<br>
+		<!-- <div class="fixed-bottom">
+			<p id="poweredby">
+			<footer>
+				<img style="float: right; margin-right: 50px; margin-top: 17px;"
+					src="/{{=appname}}/static/themes/{{=theme_styles}}/interlinkdesign/img/fir.png">
+				<img style="float: left; margin-left: 50px; margin-top: 8px;"
+					src="/{{=appname}}/static/themes/{{=theme_styles}}/interlinkdesign/img/fil.png">
+				<div
+					style="margin: 0 auto;max-width: 200px;height: 100px;border-radius: 3px;margin-top: 17px; color:#94530d">
+					Copyright © <a style="color:#ba6811" href="http://interlink.mr/">Interlink</a> 2021.</p>
+				</div>
+			</footer>
+			</p>
+		</div> -->
+
+		<!-- <footer> -->
+		<!-- <img style="float: right; margin-right: 50px; margin-top: 17px;" src="/{{=appname}}/static/themes/{{=theme_styles}}/interlinkdesign/img/fir.png"> -->
+		<!-- <img style="float: left; margin-left: 50px; margin-top: 8px;" src="/{{=appname}}/static/themes/{{=theme_styles}}/interlinkdesign/img/fil.png"> -->
+		<!-- <div style="margin: 0 auto;max-width: 200px;height: 100px;border-radius: 3px;margin-top: 17px; color:#94530d" >Copyright ©  <a style="color:#ba6811" href="http://interlink.mr/">Interlink</a> 2021.</p></div> -->
+		<!-- </footer> -->
+
+
+
+		{{pass}}
+		{{include "scripts.html"}}
+		{{include "foundation.js.html"}}
+	</body>
+	<script>
+		$(document).ready(function () {
+			$('#event_incident_report_location_id_L0').val("74");
+			$('#event_incident_report_location_id_L0').attr("disabled", true);
+			$('#event_incident_report_location_id_L0__row').hide();
+			$('#event_incident_location_id_L0').val("74");
+			$('#event_incident_location_id_L0').attr("disabled", true);
+			$('#event_incident_location_id_L0__row').hide();
+			$('#event_scenario_location_id_L0').val("74");
+			$('#event_scenario_location_id_L0').attr("disabled", true);
+			$('#event_scenario_location_id_L0__row').hide();
+			$('#event_sitrep_location_id_L0').val("74");
+			$('#event_sitrep_location_id_L0').attr("disabled", true);
+			$('#event_sitrep_location_id_L0__row').hide();
+
+			$('#project_task_time_estimated__row').hide();
+			$('#project_task_time_actual__row').hide();
+			$('#incident-event_incident_location_id-location-filter__row').hide();
+			$('#incident_report-event_incident_report_location_id-location-filter__row').hide();
+			$('#event-event_event_location_location_id-location-filter__row').hide();
+			$('#sitrep-event_sitrep_location_id-location-filter__row').hide();
+			<!-- $('#hrm_human_resource_site_id__row').hide(); -->
+			$('#facility-org_facility_location_id-location-filter__row').hide();
+			$('#org_facility_location_id_L0__row').hide();
+			$('#warehouse-inv_warehouse_location_id-location-filter__row').hide();
+			$('#inv_warehouse_location_id_L0__row').hide();
+			$('#hospital-hms_status_power_supply_type-options-filter__row').hide();
+
+			/*$('#supply_item_item_category_id').val("1");
+			$('#supply_item_item_category_id').attr("disabled", true);
+			$('#supply_item_item_category_id__row').hide();
+			
+			$('#supply_item_catalog_id').val("1");
+			/*$('#supply_item_catalog_id').attr("disabled", true);
+			$('#supply_item_catalog_id__row').hide();*/
+
+		});
+	</script>
+	<script src="/eden/static/themes/SAFIRE/interlinkdesign/jstree/jstree.min.js"></script>
+	<!-- <script src="https://cdnjs.cloudflare.com/ajax/libs/jstree/3.2.1/jstree.min.js"></script> -->
+	<script>
+		$(function () {
+			// 6 create an instance when the DOM is ready
+			$('#main-staff-menu').jstree({});
+			// 2. Liez-vous à l'événement "changed.jstree" pour détecter la sélection d'un nœud
+			$('#main-staff-menu').on("changed.jstree", function (e, data) {
+				// 3. Récupérez les nœuds sélectionnés
+				var selectedNodes = data.selected;
+
+				// 4. Vérifiez s'il y a des nœuds sélectionnés
+				if (selectedNodes.length > 0) {
+					// 5. Récupérez l'URL associée au premier nœud sélectionné (si vous souhaitez prendre en compte uniquement le premier nœud)
+					var selectedNode = selectedNodes[0]; // Prenez le premier nœud sélectionné
+
+					// 6. Récupérez l'URL du lien associé au nœud
+					var nodeHref = $('#' + selectedNode).find('a').attr('href');
+
+					// 7. Redirigez l'utilisateur vers l'URL du lien
+					window.location.href = nodeHref;
+				}
+			});
+		});
+	</script>
+
+
+</html>

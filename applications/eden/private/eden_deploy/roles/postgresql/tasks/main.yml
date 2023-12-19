@@ -1,0 +1,264 @@
+---
+# Run Debian-specific tasks
+- import_tasks: debian.yml
+  when: ansible_distribution == "Debian" # Doesn't include Ubuntu (ansible_os_family does))
+
+- name: Copy management scripts
+  copy: "src={{ item.src }} dest={{ item.dest }} mode=755"
+  become: yes
+  loop:
+    - { src: 'backup', dest: '/usr/local/bin/backup' }
+    - { src: 'clean', dest: '/usr/local/bin/clean' }
+
+- name: Copy management scripts
+  template: "src={{ item.src }} dest={{ item.dest }} mode=755"
+  become: yes
+  loop:
+    - { src: 'pg512', dest: '/usr/local/bin/pg512' }
+    - { src: 'pg1024', dest: '/usr/local/bin/pg1024' }
+
+# Tuning
+- name: Set track_counts=on
+  lineinfile: dest={{ PG_HOME }}/main/postgresql.conf
+              regexp='^track_counts = on'
+              insertafter='^#track_counts = on'
+              line='track_counts = on'
+              state=present
+  become: yes
+
+- name: Set autovacuum=on
+  lineinfile: dest={{ PG_HOME }}/main/postgresql.conf
+              regexp='^autovacuum = on'
+              insertafter='^autovacuum = on'
+              line='autovacuum = on'
+              state=present
+  become: yes
+
+# 6 for Prod (4 workers + mule)
+# 4 each for Demo/Test/Setup (2 workers + mule)
+# superuser reserved connections
+- name: Set max_connections
+  lineinfile: dest={{ PG_HOME }}/main/postgresql.conf
+              regexp='^max_connections = 20'
+              insertafter='^max_connections = 100'
+              line='max_connections = 20'
+              state=present
+  become: yes
+
+# @ToDo: Provide more granular tuning & vary if dedicated DB host vs shared
+# Levels we want to support are:
+# t2.micro = 1Gb, 1 vCPU
+# t2.small = 2Gb, 1 vCPU
+# t2.medium = 4Gb, 2 vCPU
+# m5.large = 8Gb, 2 vCPU
+- name: Tune for 1024Mb RAM. effective_cache_size
+  lineinfile: dest={{ PG_HOME }}/main/postgresql.conf
+              regexp='^effective_cache_size = 4GB'
+              insertafter='^#effective_cache_size = 4GB'
+              line='effective_cache_size = 512MB'
+              state=present
+  become: yes
+  when: ansible_memtotal_mb|int > 1023
+    
+- name: Tune for 512Mb RAM. effective_cache_size
+  lineinfile: dest={{ PG_HOME }}/main/postgresql.conf
+              regexp='^effective_cache_size = 4GB'
+              insertafter='^#effective_cache_size = 4GB'
+              line='effective_cache_size = 256MB'
+              state=present
+  become: yes
+  when: ansible_memtotal_mb|int < 1023
+
+- name: Tune for 1024Mb RAM. shared_buffers
+  lineinfile: dest={{ PG_HOME }}/main/postgresql.conf
+              regexp='^shared_buffers = 128MB'
+              insertafter='^shared_buffers = 128MB'
+              line='shared_buffers = 256MB'
+              state=present
+  become: yes
+  when: ansible_memtotal_mb|int > 1023
+    
+#- name: Tune for 512Mb RAM. shared_buffers
+#  lineinfile: dest={{ PG_HOME }}/main/postgresql.conf
+#              regexp='^shared_buffers = 128MB'
+#              insertafter='^#shared_buffers = 128MB'
+#              line='shared_buffers = 128MB'
+#              state=present
+#  become: yes
+#  when: ansible_memtotal_mb|int < 1023
+
+- name: Tune for 1024Mb RAM. work_mem
+  lineinfile: dest={{ PG_HOME }}/main/postgresql.conf
+              regexp='^work_mem = 4MB'
+              insertafter='^#work_mem = 4MB'
+              line='work_mem = 8MB'
+              state=present
+  become: yes
+  when: ansible_memtotal_mb|int > 1023
+    
+- name: Tune for 512Mb RAM. work_mem
+  lineinfile: dest={{ PG_HOME }}/main/postgresql.conf
+              regexp='^work_mem = 4MB'
+              insertafter='^#work_mem = 4MB'
+              line='work_mem = 4MB'
+              state=present
+  become: yes
+  when: ansible_memtotal_mb|int < 1023
+
+- name: Listen externally
+  lineinfile: dest={{ PG_HOME }}/main/postgresql.conf
+              regexp="#listen_addresses = \'localhost\'"
+              backrefs=yes
+              line="listen_addresses = '*'"
+              state=present
+  become: yes
+  when: db_ip != '127.0.0.1'
+
+- name: Allow external connections
+  lineinfile: dest={{ PG_HOME }}/main/pg_hba.conf
+              insertafter=EOF
+              line="host all all 0.0.0.0/0 md5"
+              state=present
+  become: yes
+  when: db_ip != '127.0.0.1'
+
+- name: Restart service
+  service: name=postgresql state=restarted
+  become: yes
+
+# Create Sahana user & set Password
+- name: Transfer pgpass.sql
+  template: src=pgpass.sql dest=/tmp/pgpass.sql
+
+- name: Create Sahana user & set Password
+  command: psql -q -d template1 -f /tmp/pgpass.sql
+  become: yes
+  become_user: postgres
+
+- name: Remove pgpass.sql
+  file: path=/tmp/pgpass.sql state=absent
+
+# Database name
+- name: set db_name variable (Prod)
+  set_fact:
+    db_name: sahana
+
+- name: set db_name variable (Demo / Test)
+  set_fact:
+    db_name: sahana-{{ type }}
+  when: type != 'prod'
+  tags:
+    - demo
+    - test
+
+# Create Database
+- name: Create DB
+  command: createdb -O sahana -E UTF8 -l en_US.UTF-8 {{ db_name }} -T template0
+  become: yes
+  # Needs allow_world_readable_tmpfiles in ansible.cfg when running as web2py
+  become_user: postgres
+  tags:
+   - test
+   - demo
+
+- name: Add PostGIS extension to DB
+  command: psql -q -d {{ db_name }} -c 'CREATE EXTENSION postgis;'
+  become: yes
+  become_user: postgres
+  register: psql_result
+  failed_when: >
+    psql_result.rc != 0 and ("already exists" not in psql_result.stderr)
+  changed_when: "psql_result.rc == 0"
+  tags:
+    - demo
+    - test
+
+- name: PostGIS Permissions
+  command: "{{ item }}"
+  loop:
+    - psql -q -d {{ db_name }} -c 'grant all on geometry_columns to sahana;'
+    - psql -q -d {{ db_name }} -c 'grant all on spatial_ref_sys to sahana;'
+  become: yes
+  become_user: postgres
+  tags:
+    - demo
+    - test
+
+- name: Configure Eden to access Database (Prod/Demo)
+  lineinfile: dest=/home/{{ type }}/applications/{{ appname }}/models/000_config.py
+              regexp="{{ item.regexp }}"
+              backrefs=yes
+              line="{{ item.line }}"
+              state=present
+  become: yes
+  loop:
+    - { regexp: '^#settings.database.db_type = \"postgres\"', line: 'settings.database.db_type = "postgres"' }
+    - { regexp: '^#settings.database.host = \"localhost\"', line: 'settings.database.host = "{{ db_ip }}"' }
+    - { regexp: '^#settings.database.password = \"password\"', line: 'settings.database.password = "{{ password }}"' }
+    - { regexp: '^#settings.gis.spatialdb = True', line: 'settings.gis.spatialdb = True' }
+    - { regexp: '^settings.base.migrate = False', line: 'settings.base.migrate = True' }
+    - { regexp: '^#settings.database.database = \"sahana\"', line: 'settings.database.database = "{{ db_name }}"' }
+  tags:
+    - demo
+
+- name: Configure Eden to access Database (Test)
+  lineinfile: dest=/home/{{ type }}/applications/{{ appname }}/models/000_config.py
+              regexp="{{ item.regexp }}"
+              backrefs=yes
+              line="{{ item.line }}"
+              state=present
+  become: yes
+  loop:
+    - { regexp: '^settings.base.migrate = False', line: 'settings.base.migrate = True' }
+    - { regexp: '^settings.database.database = \"sahana\"', line: 'settings.database.database = "{{ db_name }}"' }
+  when: type != 'prod'
+  tags:
+    - test
+
+# Clean tasks (Test)
+- name: Copy update_clean (Py 3)
+  copy: src=update_clean.py dest=/tmp/update_clean.py
+  when:
+    - type == 'test'
+    - python_major_version == '3'
+  tags:
+    - test
+
+- name: Copy update_clean (Py 2.7)
+  copy: src=update_clean27.py dest=/tmp/update_clean.py
+  when:
+    - type == 'test'
+    - python_major_version != '3'
+  tags:
+    - test
+
+- name: Allow web2py to modify clean script
+  file: 
+    path: /usr/local/bin/clean
+    owner: web2py
+  become: yes
+  when:
+    - type == 'test'
+  tags:
+    - test
+
+- name: Run update_clean
+  command: python web2py.py -S {{ appname }} -M -R /tmp/update_clean.py chdir=/home/web2py
+  become: yes
+  become_user: web2py
+  #become_flags: '-H'
+  when:
+    - type == 'test'
+  tags:
+    - test
+
+- name: Disallow web2py to modify clean script
+  file: 
+    path: /usr/local/bin/clean
+    owner: root
+  become: yes
+  when:
+    - type == 'test'
+  tags:
+    - test
+

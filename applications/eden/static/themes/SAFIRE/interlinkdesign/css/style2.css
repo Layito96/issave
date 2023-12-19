@@ -1,0 +1,399 @@
+/*
+    Theme Name: NiceAdmin
+    Theme URL: https://bootstrapmade.com/nice-admin-bootstrap-admin-html-template/
+    Author: BootstrapMade
+    Author URL: https://bootstrapmade.com
+*/
+/* Import fonts */
+
+@import url(https://fonts.googleapis.com/css?family=Lato:400,300,300italic,400italic,600,600italic,700,700italic,800,800italic);
+
+@import url(line-icons.css);
+
+
+body {
+
+    color: #797979 !important; /*amod ajout*/
+    background-image: url("../img/bg1.jpg");
+    background-position: center ;
+    background-repeat: no-repeat;
+    font-family: 'Lato', sans-serif;
+    background-attachment: fixed;
+    padding: 0px !important;
+
+    margin: 0px !important;
+
+    font-size:14px !important;
+    
+
+}
+
+footer {
+  background: #FBA214;
+  height: 45px;
+  width: 100%;
+ position:fixed; 
+  left: 0;
+  bottom: 0;
+
+  
+}
+
+h1,h2,h3,h4,h5{
+
+    font-weight: 300;
+
+}
+
+/*hide logo */
+
+@media (max-width:900px){
+.hide-item{
+  display: none;
+}
+}
+
+
+#container {
+
+    width: 100%;
+
+    height: 100%;
+
+}
+
+
+
+
+
+
+/*main content*/
+
+
+
+#main-content {
+
+margin-left: 200px;
+
+
+}
+
+
+
+.header, .footer {
+
+    min-height: 60px;
+
+    padding: 0 15px;
+
+
+
+.header {
+
+    position: fixed;
+
+    left: 0;
+
+    right: 0;
+
+    z-index: 1002;
+
+}
+
+
+
+.wrapper {
+
+    display: inline-block;
+
+    margin-top: 60px;
+
+    padding: 15px;
+
+    width: 100%;
+
+
+}
+
+/*----------------	color------------------------*/
+
+.dark-heading-bg {
+
+  background: #4c4f53;
+
+  border: 1px solid #4c4f53;
+
+}
+
+.main-bg {
+
+  background: #e6e8ea;
+
+}
+
+.white-bg {
+
+  color : #768399;
+
+  background : #fff;
+
+  background-color : #fff;
+
+}
+
+.red-bg {
+
+  color : #fff;
+
+  background : #d95043;
+
+  background-color : #d95043;
+
+}
+
+.blue-bg {
+
+  color : #fff;
+
+  background : #57889c;
+
+  background-color : #57889c;
+
+}
+
+.green-bg {
+
+  color : #fff;
+
+  background : #26c281;
+
+  background-color : #26c281;
+
+}
+
+.greenLight-bg {
+
+  color: #71843f;
+
+  background: #71843f;
+
+  background-color: #71843f;
+
+}
+
+.yellow-bg {
+
+  color : #fff;
+
+  background : #fc6;
+
+  background-color : #fc6;
+
+}
+
+.orange-bg {
+
+  color : #fff;
+
+  background : #f4b162;
+
+  background-color : #f4b162;
+
+}
+
+.purple-bg {
+
+  color : #fff;
+
+  background : #af91e1;
+
+  background-color : #af91e1;
+
+}
+
+.pink-bg {
+
+  color : #fff;
+
+  background : #f78db8;
+
+  background-color : #f78db8;
+
+}
+
+.lime-bg {
+
+  color : #fff;
+
+  background : #a8db43;
+
+  background-color : #a8db43;
+
+}
+
+.magenta-bg {
+
+  color : #fff;
+
+  background : #e65097;
+
+  background-color : #e65097;
+
+}
+
+.teal-bg {
+
+  color : #fff;
+
+  background : #97d3c5;
+
+  background-color : #97d3c5;
+
+}
+
+.brown-bg {
+
+  color : #fff;
+
+  background : #d1b993;
+
+  background-color : #d1b993;
+
+}
+
+.gray-bg {
+
+  color : #768399;
+
+  background : #e4e9eb;
+
+  background-color : #e4e9eb;
+
+}
+
+.dark-bg {
+
+  color : #fff;
+
+  background : #1a2732;
+
+  background-color : #153B7A;
+
+}
+
+.facebook-bg {
+
+  color: #fff;
+
+  background: #3b5998;
+
+  background-color : #3b5998;
+
+}
+
+.twitter-bg {
+
+  color: #fff;
+
+  background: #00aced;
+
+  background-color : #00aced;
+
+}
+
+.linkedin-bg {
+
+  color: #fff;
+
+  background: #4875b4;
+
+  background-color : #4875b4;
+
+}
+
+
+
+
+
+/*----------------  chiva home page css------------------------*/
+}
+.headbg{
+  background-image: url("../img/headerbg.jpg");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center top ;
+ width: 100%;
+ height: 200px;
+ 
+}
+
+.logo1{
+  height: 130px;
+  margin-top: 10px;
+  margin-left: 90px;
+}
+.c1{
+  padding-top: 70px;
+  
+  height: 400px;
+  width: 330px;
+ 
+}
+
+.c2{
+    margin-top: 100px;
+}
+.nn{
+  padding-top: 0px;
+  float: left;
+  font-size: 20px;
+  font-weight: 600;
+  color: #0C2043;
+}
+ 
+.dd{
+
+  color: black;
+  font-size: 18px;
+  font-weight: 400;
+  background: transparent;
+  border-top: 0px;
+  border-right: 0px;
+  border-left: 0px;
+  border-bottom: 2px solid #FF8C00; border-radius: 0px;}
+ 
+input  {  
+color : black !important; /*amod ajout*/;
+}
+input:focus  { 
+background: #FF8C00; 
+border: 0px;}
+
+.dt{
+  color: black;
+  opacity:.5;
+  height: 35px;
+  min-width: 360px;
+  font-size: 18px;
+  font-weight: 400;
+  background: transparent;
+  border-top: 0px;
+  border-right: 0px;
+  border-left: 0px;
+  border-bottom: 2px solid #FF8C00;
+  margin-bottom: 10px;
+}
+
+.ct{
+  margin-top: 0px;
+  color: #FF8C00;
+  font-size: 34px;
+  font-weight: 700;
+  text-decoration: underline;
+  
+}
+
+.form-control::-webkit-input-placeholder {
+  color: black;
+  opacity: .5;
+}

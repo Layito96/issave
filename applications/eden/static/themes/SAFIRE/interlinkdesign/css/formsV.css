@@ -1,0 +1,271 @@
+
+.container1{
+	margin-top: 20px;
+background:rgba(255,255,255, 0.1);
+border: 1px solid white;
+width: 100%;
+height: 100%;
+}
+
+.dvv{
+	
+	margin-top: 20px;
+	margin-bottom: 20px;
+}
+
+.dd{
+  color: white;
+  font-size: 18px;
+  font-weight: 400;
+  background: transparent;
+  border-top: 0px;
+  border-right: 0px;
+  border-left: 0px;
+  border-bottom: 1px solid #FF8C00; 
+  /*border-radius: 0px;*/
+  }
+ 
+input:focus  { 
+	background: transparant; 
+	color: white;
+	border-bottom: 1px solid #FBA214;
+}
+
+.form-control::-webkit-input-placeholder {
+  color: white;
+  opacity: .8;
+}
+
+
+
+select{
+	margin-bottom: 5px;
+	margin-top: 5px;
+
+	
+}
+
+
+.fl{
+	color: white;
+	opacity: .8;
+	font-size: 18px;
+    font-weight: 400;
+	background: transparent;
+	border-top: none;
+	border-left : none; 
+	border-right: none;
+	border-bottom: 2px solid #FF8C00; border-radius: 0px;
+
+}
+.fll{
+  color: white;
+  font-size: 18px;
+  font-weight: 400;
+  background: transparent;
+  
+
+}
+
+
+
+.nav-tabs{
+ 
+background: transparent;
+color:#fff;
+
+ 
+}
+ 
+ 
+ 
+.nav-tabs > li > a{
+background-color: #102B56;
+position: center;
+ color:#FFf;
+margin: 2px;
+border-top-right-radius: 0px;
+border-top-left-radius: 0px;
+}
+ 
+.nav-tabs > li > a:hover{
+ 
+background-color: #F89A32 !important;
+color:#fff;
+ border: 0px;
+
+ 
+}
+ 
+.nav-tabs > li.active > a,
+ 
+.nav-tabs > li.active > a:focus,
+ 
+.nav-tabs > li.active > a:hover{
+ 
+background-color: #F89A32 !important;
+ 
+color:#fff;
+border: 0px;
+ 
+}
+
+.tabtext{
+    font-size: 20px;
+    font-stretch: ultra-condensed;
+    
+}
+
+
+
+/* Customize the label (the container) */
+.cr {
+  display: block;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 400;
+  color: white;
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Hide the browser's default checkbox */
+.cr input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+/* Create a custom checkbox */
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: white;
+  border: 2px solid #d5d5d5; border-radius: 2px;
+}
+
+/* On mouse-over, add a grey background color */
+.cr:hover input ~ .checkmark {
+  background-color: #ccc;
+}
+
+/* When the checkbox is checked, add a blue background */
+.cr input:checked ~ .checkmark {
+  background-color: #FF8C00;
+  border: none;
+}
+
+/* Create the checkmark/indicator (hidden when not checked) */
+.checkmark:after {
+  content: "";
+  position: absolute;
+  
+}
+
+/* Show the checkmark when checked */
+.cr input:checked ~ .checkmark:after {
+  display: block;
+}
+
+
+/* Style the checkmark/indicator */
+.cr .checkmark:after {
+  left: 5px;
+  top: 2px;
+  width: 8px;
+  height: 13px;
+  border: solid white;
+  border-width: 0 3px 3px 0;
+  -webkit-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
+
+
+
+
+
+
+
+
+
+
+/* The container */
+.cer {
+  display: block;
+  position: relative;
+  padding-left: 35px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  font-size: 18px;
+  font-weight: 400;
+  color: white;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+/* Hide the browser's default radio button */
+.cer input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+}
+
+/* Create a custom radio button */
+.ck {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 20px;
+  width: 20px;
+  background-color: #eee;
+  border-radius: 50%;
+  border: 2px solid #d5d5d5; 
+}
+
+/* On mouse-over, add a grey background color */
+.cer:hover input ~ .ck {
+  background-color: #ccc;
+}
+
+/* When the radio button is checked, add a blue background */
+.cer input:checked ~ .ck {
+  background-color: #FF8C00;
+  border: none;
+}
+
+/* Create the indicator (the dot/circle - hidden when not checked) */
+.ck:after {
+  content: "";
+  position: absolute;
+  
+}
+
+/* Show the indicator (dot/circle) when checked */
+.cer input:checked ~ .ck:after {
+  display: block;
+}
+
+/* Style the indicator (dot/circle) */
+.cer .ck:after {
+  top: 6px;
+  left: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: white;
+
+}

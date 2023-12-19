@@ -1,0 +1,15 @@
+
+.card{
+    background-image:
+    radial-gradient(
+      circle at  top left ,
+      #21529E,
+      #14315B
+    );"
+
+}
+
+.card-text{
+    
+    color: #FF8C00;
+}

@@ -1,0 +1,17 @@
+---
+# This is currently unused
+# @ToDo: Replace with individual control
+- name: Update System Packages
+  apt: name={{ item }} state=latest
+  become: yes
+  loop: "{{ system_packages|flatten(levels=1) }}"
+
+- name: Update pip Packages
+  pip: name={{ item }} extra_args='--upgrade'
+  become: yes
+  loop: "{{ pip_packages|flatten(levels=1) }}"
+
+- name: Pull from git remote
+  command: git pull chdir={{ item.chdir }}
+  become: yes
+  loop: "{{ git_packages|flatten(levels=1) }}"

@@ -1,0 +1,74 @@
+---
+- name: Create ansible cfg dir
+  file: path=/etc/ansible state=directory
+  become: yes
+
+- name: Copy ansible.cfg
+  copy: src=ansible.cfg dest=/etc/ansible/ansible.cfg
+  become: yes
+
+# Not writable by Web2Py user & anyway we have it in syslog
+#- name: Create ansible logfile
+#  file: path=/var/log/ansible.log state=touch
+
+# http://hakunin.com/six-ansible-practices#add-github-to-knownhosts-properly-and-securely
+- name: Ensure github.com is a known host
+  lineinfile:
+    dest: /root/.ssh/known_hosts
+    create: yes
+    state: present
+    line: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
+    regexp: "^github\\.com"
+  become: yes
+
+# @ToDo: Separate to debian.yml
+- name: Uninstall OS' Python packages
+  apt:
+    name: ['python-boto',
+           'python3-boto',
+           'python3-botocore',
+           # Done in user-data.sh
+           #'python3-jinja2',
+           #'python3-yaml',
+           ]
+    state: absent
+    # Uninstalls' Python2 on current Marketplace Buster which then stops install
+    #autoremove: yes
+  become: yes
+
+- name: Install Boto # Want latest version to know about all regions
+  pip:
+    name: boto
+    extra_args: --upgrade
+  become: yes
+
+- name: Install Boto3
+  pip:
+    name: boto3
+    extra_args: --upgrade
+  become: yes
+
+# Needed for 'dig' lookup
+- name: Install DNSPython
+  pip:
+    name: dnspython
+    extra_args: --upgrade
+  become: yes
+
+- name: Install YAML # full_load method
+  pip:
+    name: PyYAML>5.1
+    extra_args: --upgrade
+  become: yes
+
+- name: Install Jinja2
+  pip:
+    name: jinja2
+    extra_args: --upgrade
+  become: yes
+
+- name: Install Ansible
+  pip:
+    name: ansible
+    extra_args: --upgrade
+  become: yes

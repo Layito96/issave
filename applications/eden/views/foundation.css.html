@@ -1,0 +1,4 @@
+{{theme=s3.theme_base}}{{if s3.debug:}}{{if s3.rtl:}}<link href="/{{=appname}}/static/themes/{{=theme}}/foundation/app.rtl.css" rel="stylesheet" />{{else:}}
+<link href="/{{=appname}}/static/themes/{{=theme}}/foundation/app.css" rel="stylesheet" />{{pass}}{{else:}}
+{{if s3.rtl:}}<link href="/{{=appname}}/static/themes/{{=theme}}/foundation/app.rtl.min.css" rel="stylesheet" />{{else:}}
+<link href="/{{=appname}}/static/themes/{{=theme}}/foundation/app.min.css" rel="stylesheet" />{{pass}}{{pass}}

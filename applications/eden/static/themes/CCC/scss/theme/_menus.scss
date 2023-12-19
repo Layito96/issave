@@ -1,0 +1,114 @@
+// ============================================================================
+// Styles for Menus
+// ============================================================================
+// VARIABLES
+
+// ============================================================================
+// STYLES
+
+/* Top (Modules) Menu) */
+.top-bar {
+    // Menu logo
+    .logo {
+        display: inline-block;
+        height: 35px;
+        margin-top: -10px;
+        margin-bottom: -10px;
+    }
+    a {
+        color: $white;
+        font-size: .9375rem;
+    }
+    a:hover {
+        //background: scale-color($DarkPurple, $lightness: -14%);
+        background: $dropdown-menu-item-background-active;
+    }
+    //li.active.has-dropdown > a::after {
+    //    
+    //}
+    .menu .active > a {
+        color: $white;
+        background: $HarleyDavidsonOrange;
+    }
+    .menu .active > a:hover {
+        background: scale-color($HarleyDavidsonOrange, $lightness: -14%);
+    }
+    .menu.dropdown {
+        // Display over the Alerts (98)
+        z-index: 100;
+    }
+}
+
+/* Personal Menu */
+.personal-menu-area {
+    text-align: right;
+}
+//.username is in _page.scss
+.personal-menu {
+    float: right;
+    clear: right;
+    li {
+        font-size: .875rem;
+        font-weight: normal;
+        a {
+            color: #999;
+            display: inline-block;
+            padding: .0625rem .1875rem;
+            text-decoration: none;
+        }
+        a:hover {
+            color: #737373;
+        }
+    }
+    li:before {
+        content: "|";
+        margin: 0 .75rem;
+    }
+    li:first-child:before {
+        content: "";
+        margin: 0;
+    }
+}
+
+/* Side (Options) Menu) */
+/* - only used for Admin */
+aside.columns {
+    font-size: .875rem;
+    padding-left: 0.7em;
+    padding-right: 0.6rem;
+    a {
+        color: #666;
+        background: #f3f3f3;
+    }
+    a:hover {
+        color: $white;
+        background: $DarkPurple;
+    }
+    li.heading {
+        margin-top: .125rem;
+        font-weight: 700;
+        text-transform: uppercase;
+    }
+    li.heading:not(:first-child) {
+        border-top: 1px solid #eaeaea;
+    }
+    .menu .active > a {
+        color: #444;
+        background: #e0e1e2;
+    }
+    .menu .active > a:hover {
+        color: $white;
+        background: $DarkPurple;
+    }
+    .menu.nested {
+        margin-left: 1.25rem;
+    }
+    nav {
+        background: #f3f3f3;
+        margin-top: 10px;
+        padding-top: .25rem;
+        padding-bottom: .25rem;
+    }
+}
+
+// END ========================================================================

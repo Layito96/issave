@@ -1,0 +1,7 @@
+Name,Type,Enabled,Default
+Bing Aerial,Aerial,False,
+Bing Aerial with Labels,AerialWithLabelsOnDemand,False,
+Bing Roads,RoadOnDemand,False,
+Bing Roads (Dark),CanvasDark,False,
+Bing Roads (Light),CanvasLight,False,
+Bing Roads (Gray),CanvasGray,False,

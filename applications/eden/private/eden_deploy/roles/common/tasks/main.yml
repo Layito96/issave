@@ -1,0 +1,590 @@
+---
+# Check for correct OS
+-  fail: msg="Exiting as this deployment method currently only supports Debian"
+   when: ansible_distribution != "Debian" # Doesn't include Ubuntu (ansible_os_family does))
+
+- name: check if we're running on EC2
+  stat:
+    path: "/etc/cloud/cloud.cfg"
+    get_attributes: False
+    get_checksum:   False
+    # @ToDo: Deprecate when we get to Ansible 2.5.x
+    #get_md5:        False
+    get_mime:       False
+  register: cloud_cfg
+
+# Run Amazon EC2-specific tasks
+- import_tasks: ec2.yml
+  when: cloud_cfg.stat.exists
+
+- name: Update hostname file
+  template: src=hostname dest=/etc/hostname
+  become: yes
+
+- name: Update hosts file
+  lineinfile: dest=/etc/hosts
+              regexp="^127.0.0.1 localhost"
+              insertafter="^127.0.0.1 localhost"
+              line="127.0.0.1 {{ sitename }} {{ hostname }} localhost"
+              state=present
+  become: yes
+
+- name: Update mailname file
+  template: src=mailname dest=/etc/mailname
+  become: yes
+
+# Run Debian-specific tasks
+-  import_tasks: debian.yml
+   when: ansible_distribution == "Debian" # Doesn't include Ubuntu (ansible_os_family does))
+
+# Python Libraries, where we need a more recent version than that provided by the OS
+- name: Install lxml
+  pip: name=lxml
+  become: yes
+
+- name: Install dateutil
+  pip: name=python-dateutil
+  become: yes
+
+# GDAL
+# pip install gdal==$(gdal-config --version)
+
+- name: Install pillow
+  pip: name=pillow
+  become: yes
+
+- name: Install Reportlab # Want Percentage support
+  pip: name=reportlab
+  become: yes
+
+- name: Install Requests # APT package fails to import on Debian 9
+  pip: name=requests
+  become: yes
+
+- name: Install Shapely # Want Simplify enhancements
+  pip: name=Shapely
+  become: yes
+
+- name: Install XLRD # XLS import support
+  pip: name=xlrd
+  become: yes
+
+- name: Install OpenPyXL # XLSX import support
+  pip: name=openpyxl
+  become: yes
+
+- name: Install XLWT
+  pip: name=xlwt
+  become: yes
+
+- name: Install GeoPy
+  pip: name=geopy
+  become: yes
+
+#- name: Install Arrow
+#  pip: name=arrow
+#  become: yes
+
+# Web2Py
+- name: Create web2py user
+  #user: name=web2py system=true
+  command: adduser --system --group --disabled-password web2py
+  become: yes
+
+#- name: Create web2py group
+#  group: name=web2py state=present
+
+# Needed for ability to use Ansible to do system stuff
+- name: Allow web2py user to use sudo w/o password
+  copy: src=sudoers dest=/etc/sudoers.d/95-web2py-user
+  become: yes
+
+- name: check if coapp has been installed
+  stat:
+    path: /home/setup/applications/{{ appname }}/models/000_config.py
+    get_attributes: False
+    get_checksum:   False
+    # @ToDo: Deprecate when we get to Ansible 2.5.x
+    #get_md5:        False
+    get_mime:       False
+  register: coapp
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Clone web2py
+  git: # recursive by default
+    repo: https://github.com/web2py/web2py.git
+    dest: /home/{{ type}}
+    # 2.21.2
+    version: 31905858b
+    # Don't update unless explicitly desired
+    update: no
+  become: yes
+  when: (type == 'setup' and coapp.stat.exists == False) or
+        (type != 'setup')
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Configure PyDAL & YATL
+  command: git submodule update --init --recursive
+  args:
+    chdir: /home/{{ type }}
+  become: yes
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Copy wsgihandler
+  copy:
+    src: /home/{{ type }}/handlers/wsgihandler.py
+    dest: /home/{{ type }}/wsgihandler.py
+    remote_src: yes
+  become: yes
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Copy routes.py
+  template: src=routes.py dest=/home/{{ type }}/routes.py
+  become: yes
+  when: (type == 'setup' and coapp.stat.exists == False) or
+        (type != 'setup')
+  tags:
+    - test
+    - demo
+    - setup
+
+# matplotlib
+# Only used by deprecated survey module
+#- name: Create matplotlib directory
+#  file: path=/home/{{ type }}/.matplotlib state=directory owner=web2py
+
+#- name: Update wsgihandler.py
+#  lineinfile: dest=/home/{{ type }}/wsgihandler.py
+#              regexp=''
+#              insertafter=EOF
+#              line='os.environ["MPLCONFIGDIR"] = "/home/{{ type }}/.matplotlib"'
+
+# - name: Edit matplotlibrc
+#   lineinfile: dest=/etc/matplotlibrc state=present backref=yes regexp='backend      : TkAgg' line='backend      : Agg'
+
+- name: Remove old web2py folder
+  file:
+    path: /home/web2py
+    state: absent
+  become: yes
+
+- name: Create symlink
+  #file: src=/home/web2py dest=/home/prod state=link owner=web2py group=web2py
+  file: src=/home/prod dest=/home/web2py state=link owner=web2py group=web2py
+  become: yes
+
+- name: Create symlink
+  file: src=/home/{{ type }} dest=/root/{{ type }} state=link
+  become: yes
+  tags:
+    - test
+    - demo
+    - setup
+
+# Eden
+- name: Clone Eden
+  git: # recursive by default
+    repo: "{{ repo_url }}"
+    dest: /home/{{ type }}/applications/{{ appname }}
+    #version: cda35fd
+    # Don't update unless explicitly desired
+    update: no
+  become: yes
+  when: (type == 'setup' and coapp.stat.exists == False) or
+        (type != 'setup')
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Copy default 000_config.py
+  copy:
+    src: /home/{{ type }}/applications/{{ appname }}/modules/templates/000_config.py
+    dest: /home/{{ type }}/applications/{{ appname }}/models
+    remote_src: yes
+  become: yes
+  when: (type == 'setup' and coapp.stat.exists == False) or
+        (type != 'setup')
+  tags:
+    - demo
+    - setup
+
+- name: Copy 000_config.py from Production for Test (need same HMAC for passwords and settings should match)
+  # Assumes that appname for Prod is the same as Test!
+  copy:
+    src: /home/prod/applications/{{ appname }}/models/000_config.py
+    dest: /home/{{ type }}/applications/{{ appname }}/models
+    remote_src: yes
+  become: yes
+  when: type == 'test'
+  tags:
+    - test
+
+- name: Fix permissions
+  file: path=/home/{{item}} state=directory owner=web2py
+  become: yes
+  loop:
+    - "{{ type }}/applications"
+    - "{{ type }}/applications/admin/cache"
+    - "{{ type }}/applications/admin/cron"
+    - "{{ type }}/applications/admin/databases"
+    - "{{ type }}/applications/admin/errors"
+    - "{{ type }}/applications/admin/sessions"
+    - "{{ type }}/applications/{{ appname }}"
+    - "{{ type }}/applications/{{ appname }}/cache"
+    - "{{ type }}/applications/{{ appname }}/cron"
+    - "{{ type }}/applications/{{ appname }}/databases"
+    - "{{ type }}/applications/{{ appname }}/errors"
+    - "{{ type }}/applications/{{ appname }}/models"
+    - "{{ type }}/applications/{{ appname }}/sessions"
+    - "{{ type }}/applications/{{ appname }}/static/cache"
+    - "{{ type }}/applications/{{ appname }}/static/cache/chart"
+    - "{{ type }}/applications/{{ appname }}/static/fonts"
+    - "{{ type }}/applications/{{ appname }}/static/img/markers"
+    - "{{ type }}/applications/{{ appname }}/uploads"
+    - "{{ type }}/applications/{{ appname }}/uploads/gis_cache"
+    - "{{ type }}/applications/{{ appname }}/uploads/images"
+    - "{{ type }}/applications/{{ appname }}/uploads/tracks"
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Fix permissions
+  file: path=/home/web2py state=directory owner=web2py
+  become: yes
+  when: type == 'prod'
+
+- name: Fix permissions
+  file: path="/home/{{ type }}" state=directory owner=web2py
+  become: yes
+  when: type != 'prod'
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Create symlink (eden in web2py)
+  file: src=/home/{{ type }}/applications/{{ appname }} dest=/home/{{ type }}/eden state=link
+  become: yes
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Create symlink (eden in home)
+  file: src=/home/{{ type }}/applications/{{ appname }} dest=/root/eden state=link
+  become: yes
+
+- name: Schedule Backups
+  copy: src=cron_backup dest=/etc/cron.d/sahana
+  become: yes
+
+- stat: path=/home/setup/
+  register: setup
+
+- name: Copy read_hmac_key.py
+  copy: "src=read_hmac_key.py dest=/tmp/read_hmac_key.py"
+  when: (coapp.stat.exists == True) or
+        (type == 'setup')
+  tags:
+    - setup
+
+- name: Read hmac_key from Setup for Prod
+  # Assumes default appname for setup
+  #command: sudo -H -u web2py python web2py.py -S eden -M -R /tmp/read_hmac_key.py chdir=/home/setup
+  command: python web2py.py -S eden -M -R /tmp/read_hmac_key.py chdir=/home/setup
+  become: yes
+  become_user: web2py
+  #become_flags: '-H'
+  ignore_errors: yes
+  when: coapp.stat.exists == True
+
+- name: Read hmac_key from Prod for Setup
+  # Assumes default appname for prod
+  #command: sudo -H -u web2py python web2py.py -S eden -M -R /tmp/read_hmac_key.py chdir=/home/setup
+  command: python web2py.py -S eden -M -R /tmp/read_hmac_key.py chdir=/home/prod
+  become: yes
+  become_user: web2py
+  #become_flags: '-H'
+  ignore_errors: yes
+  when: (type == 'setup')
+  tags:
+    - setup
+
+- name: Set hmac_key variable
+  set_fact:
+    hmac_key: "{{ lookup('file', '/tmp/hmac_key') }}"
+  when: (coapp.stat.exists == True) or
+        (type == 'setup')
+  tags:
+    - setup
+
+- name: Generate & set hmac_key variable
+  set_fact:
+    hmac_key: "{{ lookup('password', '/tmp/hmac_key chars=ascii_letters,digits,.-_,,') }}" # Cannot include : or "
+  when: (type == 'prod' and coapp.stat.exists == False) or
+        (type != 'prod')
+  tags:
+    - demo
+
+- name: Remove hmac_key file
+  file: path=/tmp/hmac_key state=absent
+  tags:
+    - demo
+    - setup
+
+# Prepare for DNS check so that we know whether it's safe to go SSL
+- name: Define running_type (Prod being installed from co-app)
+  set_fact:
+    running_type: setup
+  #when: type == "prod"
+  when: coapp.stat.exists == True
+
+# @ToDo: There is no web_server running, so how do we serve this file?
+- name: Define running_type (Prod being installed remotely)
+  set_fact:
+    running_type: prod
+  #when: type == "prod"
+  when: coapp.stat.exists == False
+
+- name: Define running_type (Test/Demo/Setup)
+  set_fact:
+    running_type: prod
+  when: type != "prod"
+  tags:
+    - demo
+    - test
+    - setup
+
+- name: Create sitename file in static
+  copy:
+    content: "{{ sitename }}"
+    dest: /home/{{ running_type }}/applications/{{ appname }}/static/sitename
+  when: protocol == "https"
+  become: yes
+  tags:
+    - demo
+    - test
+    - setup
+
+# https://ansibledaily.com/execute-detached-process-with-ansible/
+- name: Launch simple web server (Prod being installed remotely)
+  # Python 3.5 (i.e. Debian 9) doesn't support -d option
+  #shell: nohup python3 -m http.server 80 -d /home/{{ running_type }}/applications </dev/null >/dev/null 2>&1 &
+  shell:
+    cmd: nohup python3 -m http.server 80 </dev/null >/dev/null 2>&1 &
+    chdir: /home/{{ running_type }}/applications
+  become: yes
+  #when: type == "prod"
+  when: coapp.stat.exists == False
+
+# We check the IP not the name, as prod installs would otherwise check localhost
+# (1) This will fail unless we add :8000
+# (2) This doesn't achieve our aim!
+- name: Connect to resolved IP to see if we can find the sitename file we created
+  uri:
+    url: http://{{ lookup('dig', sitename + '.') }}/{{ appname }}/static/sitename
+    return_content: yes
+  register: sitename_read
+  ignore_errors: yes
+  when: protocol == "https"
+  tags:
+    - demo
+    - test
+    - setup
+
+- name: DNS check failed, so reverting to 'http' as not safe to go SSL
+  set_fact:
+    protocol: http
+  when: (protocol == "https") and
+        (sitename not in sitename_read.content)
+  tags:
+    - demo
+    - test
+    - setup
+
+- name: Stop simple web server (Prod being installed remotely)
+  command: killall python3
+  become: yes
+  #when: type == "prod"
+  when: coapp.stat.exists == False
+
+- name: Edit 000_config.py (Prod / Demo / Setup)
+  lineinfile: dest=/home/{{ type }}/applications/{{ appname }}/models/000_config.py
+              regexp="{{ item.regexp }}"
+              line="{{ item.line }}"
+              state=present
+              backrefs=yes
+  loop:
+    - { regexp: '^FINISHED_EDITING_CONFIG_FILE = False', line: 'FINISHED_EDITING_CONFIG_FILE = True' }
+    - { regexp: 'akeytochange', line: 'settings.auth.hmac_key = "{{ hmac_key }}"' }
+    - { regexp: '^#settings.base.public_url = \"http://127.0.0.1:8000\"', line: 'settings.base.public_url = "{{ protocol }}://{{ sitename }}"' }
+    - { regexp: '^#settings.base.cdn = True', line: 'settings.base.cdn = True' }
+  become: yes
+  when: (type == 'setup' and coapp.stat.exists == False) or
+        (type != 'setup')
+  tags:
+    - demo
+    - setup
+
+- name: Edit 000_config.py (Prod / Setup)
+  lineinfile: dest=/home/{{ type }}/applications/{{ appname }}/models/000_config.py
+              regexp='^#settings.base.prepopulate_demo = 0'
+              backrefs=yes
+              line='settings.base.prepopulate_demo = 0'
+              state=present
+  become: yes
+  tags:
+    - setup
+
+- name: Edit 000_config.py (Test)
+  lineinfile: dest=/home/{{ type }}/applications/{{ appname }}/models/000_config.py
+              regexp='^settings.base.public_url'
+              backrefs=yes
+              line='settings.base.public_url = "{{ protocol }}://{{ sitename }}"'
+              state=present
+
+- name: Set template_type variable
+  set_fact:
+    template_type: "{{ template | type_debug }}"
+  tags:
+    - demo
+
+# @ToDo: Could also x-check for presence of __init__.py & config.py
+- name: Seeing if there is a Sub-Template for this Country (Prod / Demo) - coming from Setup module
+  stat:
+    path: /home/{{ type }}/applications/{{ appname }}/modules/templates/{{ template }}/{{ country }}
+  when:
+    country is defined and
+    country and
+    country|length > 0 and
+    template_type == 'str'
+  register: sub_folder
+  tags:
+    - demo
+
+- name: Append Sub-Template to list of Templates
+  set_fact: template="[ '{{ template }}', '{{ template }}.{{ country }}' ]"
+  when: sub_folder.stat.isdir is defined and sub_folder.stat.isdir
+
+- name: Set template_type variable
+  set_fact:
+    template_type: "{{ template | type_debug }}"
+  tags:
+    - demo
+
+# @ToDo: Could also x-check for presence of __init__.py & config.py
+- name: Seeing if there is a locale template for this Country (Prod / Demo) - coming from Setup module
+  stat:
+    path: /home/{{ type }}/applications/{{ appname }}/modules/templates/locations/{{ country }}
+  when: country is defined and country and country|length > 0
+  register: locale_folder
+  tags:
+    - demo
+
+- name: Prepend locale to list of Templates (No Sub-Template)
+  set_fact: template="[ 'locations.{{ country }}', '{{ template }}' ]"
+  when:
+    - locale_folder.stat.isdir is defined
+    - locale_folder.stat.isdir
+    - template_type == 'str'
+
+- name: Prepend locale to list of Templates (Sub-Template exists)
+  set_fact: template="[ 'locations.{{ country }}' ] + {{ template }}"
+  when:
+    - locale_folder.stat.isdir is defined
+    - locale_folder.stat.isdir
+    - template_type == 'list'
+
+- name: Set template_type variable
+  set_fact:
+    template_type: "{{ template | type_debug }}"
+  tags:
+    - demo
+
+- name: Setting Templates (Prod / Demo) - coming from Setup module with locale folder(s) available
+  lineinfile: dest=/home/{{ type }}/applications/{{ appname }}/models/000_config.py
+              regexp='^settings.base.template = \"default\"'
+              backrefs=yes
+              line='settings.base.template = ["{{ template | join('", "') }}"]'
+              state=present
+  become: yes
+  when: template_type == 'list'
+  tags:
+    - demo
+
+- name: Setting Template (Prod / Demo) - coming from bootstrap or no locale folders available
+  lineinfile: dest=/home/{{ type }}/applications/{{ appname }}/models/000_config.py
+              regexp='^settings.base.template = \"default\"'
+              backrefs=yes
+              line='settings.base.template = "{{ template }}"'
+              state=present
+  become: yes
+  when: template_type == 'str' or template_type == 'AnsibleUnicode'
+  tags:
+    - demo
+
+- name: Setting Template (Setup)
+  lineinfile: dest=/home/{{ type }}/applications/{{ appname }}/models/000_config.py
+              regexp='^settings.base.template = \"default\"'
+              backrefs=yes
+              line='settings.base.template = "setup"'
+              state=present
+  become: yes
+  when:
+    - type == 'setup' and coapp.stat.exists == False
+  tags:
+    - setup
+
+- name: Setting Sender (Prod)
+  lineinfile: dest=/home/{{ type }}/applications/{{ appname }}/models/000_config.py
+              regexp='^#settings.mail.sender = \"'Sahana' <sahana@example.org>\"'
+              backrefs=yes
+              line='settings.mail.sender = "<{{ sender }}>"'
+              state=present
+  become: yes
+  when: not((sender is undefined) or (sender is none) or (sender|trim == ''))
+
+# NB These are all designed for a single-host setup
+# @ToDo: Replace with Ansible methods which are multi-host aware
+- name: Copy management scripts
+  copy: "src={{ item.src }} dest={{ item.dest }} mode=755"
+  become: yes
+  loop:
+    - { src: 'compile', dest: '/usr/local/bin/compile' }
+    - { src: 'migrate', dest: '/usr/local/bin/migrate' }
+    - { src: 'pull', dest: '/usr/local/bin/pull' }
+    - { src: 'revert', dest: '/usr/local/bin/revert' }
+    - { src: 'w2p', dest: '/usr/local/bin/w2p' }
+
+# SSL certificate
+# - currently we just support the free/automatic DV certificates from Let's Encrypt
+# NB Not using the Ansible module, as this seems overly complex:
+# http://docs.ansible.com/ansible/latest/modules/letsencrypt_module.html
+# @ToDo: Support manually-provided certificates, e.g. to use OV/EV certificates
+
+- name: Stop Rocket Server (if deploying from co-app bootstrap)
+  #service: name=web2py  state=stopped
+  command: /etc/init.d/web2py stop
+  become: yes
+  ignore_errors: True
+  when: coapp.stat.exists == True
+
+- name: Remove port 80 redirection rule (if deploying from co-app bootstrap)
+  command: iptables -t nat -D PREROUTING -p tcp --dport 80 -j REDIRECT --to-ports 8000
+  become: yes
+  ignore_errors: True
+  when: coapp.stat.exists == True

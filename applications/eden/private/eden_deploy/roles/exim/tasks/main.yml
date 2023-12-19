@@ -1,0 +1,8 @@
+---
+# Run Debian-specific tasks
+-  import_tasks: debian.yml
+   when: ansible_distribution == "Debian" # Doesn't include Ubuntu (ansible_os_family does))
+
+# SmartHost configuration
+-  import_tasks: smart_host.yml
+   when: not((smart_host is undefined) or (smart_host is none) or (smart_host|trim == ''))

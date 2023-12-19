@@ -1,0 +1,94 @@
+---
+- name: Run clean script (Test)
+  command: clean test
+  ignore_errors: yes
+  when:
+    - type == 'test'
+    - db_type == 'postgresql' # MySQL clean script not yet multi-instance
+  become: yes
+  tags:
+    - test
+
+- name: Create Tables & Prepopulate (Prod / Demo / Setup)
+  #command: sudo -H -u web2py python web2py.py -S {{ appname }} -M -R applications/{{ appname }}/static/scripts/tools/noop.py
+  command: python web2py.py -S {{ appname }} -M -R applications/{{ appname }}/static/scripts/tools/noop.py chdir=/home/{{ type }}
+  become: yes
+  become_user: web2py
+  #become_flags: '-H'
+  tags:
+    - demo
+    - setup
+
+- name: Configure for Production
+  lineinfile: dest=/home/{{ type }}/applications/{{ appname }}/models/000_config.py
+              regexp="{{ item.regexp }}"
+              backrefs=yes
+              line="{{ item.line }}"
+              state=present
+  become: yes
+  loop:
+    - { regexp: '^#settings.base.prepopulate = 0', line: 'settings.base.prepopulate = 0' }
+    - { regexp: '^settings.base.migrate = True', line: 'settings.base.migrate = False' }
+  tags:
+    - demo
+    - test
+    - setup
+
+- name: Compile
+  command: python web2py.py -S {{ appname }} -M -R applications/{{ appname }}/static/scripts/tools/compile.py chdir=/home/{{ type }}
+  become: yes
+  #become_user: web2py
+  #become_flags: '-H'
+  # Notify doesn't work if we kill the Scheduler task before it can run ;)
+  notify: Restart Webserver
+  tags:
+    - demo
+    - test
+    - setup
+
+- name: Create script to Import Admin User from coapp -> Prod
+  template: src="import_admin_user.py.j2" dest="/tmp/import_admin_user.py"
+  when: coapp.stat.exists == True
+#  tags: # or from Prod -> Co-app
+#    - setup
+
+- name: Import Admin User from coapp -> Prod
+  #command: sudo -H -u web2py python web2py.py -S {{ appname }} -M -R /tmp/import_admin_user.py chdir=/home/{{ type }}
+  command: python web2py.py -S {{ appname }} -M -R /tmp/import_admin_user.py chdir=/home/{{ type }}
+  become: yes
+  become_user: web2py
+  #become_flags: '-H'
+  when: coapp.stat.exists == True
+#  tags: # or from Prod -> Co-app
+#    - setup
+
+# @ToDo: Import Admin User(s) from Prod -> coapp when coapp.stat.exists == False
+
+# Notify doesn't work if we kill the Scheduler task before it can run ;)
+- name: Start uwsgi
+  service: name=uwsgi-{{type}} state=started
+  become: yes
+  #service: name=uwsgi state=started
+
+# Note this needs to actually run after last task as it kills us ;)
+- name: Stop standalone Scheduler (if deploying from co-app bootstrap)
+  #service: name=web2py-scheduler  state=stopped
+  #command: /etc/init.d/web2py-scheduler stop
+  #shell: kill $(ps aux | grep '[p]ython web2py.py' | awk '{print $2}')
+  #shell: sleep 10 ; kill $(ps aux | grep '[p]ython web2py.py' | awk '{print $2}') | at now
+  shell: echo "pkill -f python" | at now + 1 minutes
+  become: yes
+  ignore_errors: True
+  when: coapp.stat.exists == True
+
+# Shouldn't be required
+#- name: Reboot
+#  command: shutdown -r +1
+#  ignore_errors: True
+#  become: yes
+#  when:
+#    - type != 'prod'
+#  tags:
+#    - demo
+#    - test
+#    - setup

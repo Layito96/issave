@@ -1,0 +1,39 @@
+.d1{
+
+ 
+  background: transparent;
+  border-top: 0px;
+  border-right: 0px;
+  border-left: 0px;
+  border-bottom: 2px solid black; border-radius: 0px;}
+
+  .d2{
+  	 color: black;
+  font-size: 20px;
+  font-weight: 500px;
+  }
+
+  .d3{
+  	color: black;
+    font-size: 16px;
+    font-weight: 300px;
+    margin-top: 20px;
+    margin-left: 30px;
+  }
+
+  .d4{
+  background: transparent;
+  width: 78%;
+  margin-left: 250px;
+  border-top: 0px;
+  border-right: 0px;
+  border-left: 0px;
+  border-bottom: 2px solid black; border-radius: 0px;}
+  }
+
+  .d22{
+  float: right;
+  color: black;
+  font-size: 20px;
+  font-weight: 500px;
+  }

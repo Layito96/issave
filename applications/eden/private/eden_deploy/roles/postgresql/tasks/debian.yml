@@ -1,0 +1,79 @@
+---
+- name: Uncomment Locale
+  replace:
+    path: /etc/locale.gen
+    regexp: '# en_US.UTF-8'
+    replace: 'en_US.UTF-8'
+  become: yes
+
+- name: Generate Locales
+  command: /usr/sbin/locale-gen
+  become: yes
+
+- name: Add key
+  apt_key: url=https://www.postgresql.org/media/keys/ACCC4CF8.asc state=present
+  become: yes
+
+- name: Add PostgreSQL repo
+  apt_repository:
+    repo: deb http://apt.postgresql.org/pub/repos/apt/ {{ ansible_distribution_release }}-pgdg main
+    state: present
+    # Default:
+    #update_cache: yes
+  become: yes
+
+- name: Install dependencies and packages (Debian 11)
+  apt:
+    name: ['postgresql-13',
+           'python3-psycopg2',
+           'postgresql-13-postgis-3',
+           #'ptop',
+           'pgtop',
+           ]
+    state: present
+  become: yes
+  when: ansible_distribution_major_version == '11'
+
+- name: Install dependencies and packages (Debian 10)
+  apt:
+    name: ['postgresql-11',
+           'python3-psycopg2',
+           'postgresql-11-postgis-2.5',
+           #'ptop',
+           'pgtop',
+           ]
+    state: present
+  become: yes
+  when: ansible_distribution_major_version == '10'
+
+# Psycopg2 versions in stretch/jessie can have problems with PG10+
+- name: Install dependencies and packages (Debian < 10)
+  apt:
+    name: ['postgresql-9.6',
+           'python-psycopg2',
+           'postgresql-9.6-postgis-2.3',
+           'ptop',
+           'pgtop',
+           ]
+    state: present
+  become: yes
+  when: (ansible_distribution_major_version == '7') or 
+        (ansible_distribution_major_version == '8') or
+        (ansible_distribution_major_version == '9')
+
+- name: Set $PG_HOME (Debian 11)
+  set_fact:
+    PG_HOME: /etc/postgresql/13
+  when: ansible_distribution_major_version == '11'
+
+- name: Set $PG_HOME (Debian 10)
+  set_fact:
+    PG_HOME: /etc/postgresql/11
+  when: ansible_distribution_major_version == '10'
+
+- name: Set $PG_HOME (Debian < 10)
+  set_fact:
+    PG_HOME: /etc/postgresql/9.6
+  when: (ansible_distribution_major_version == '7') or 
+        (ansible_distribution_major_version == '8') or
+        (ansible_distribution_major_version == '9')

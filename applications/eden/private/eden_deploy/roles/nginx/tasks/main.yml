@@ -1,0 +1,103 @@
+---
+# Run Debian-specific tasks
+-  import_tasks: debian.yml
+   when: ansible_distribution == "Debian" # Doesn't include Ubuntu (ansible_os_family does))
+
+- name: Copy maintenance.html
+  copy: src=maintenance.html dest=/var/www/maintenance.html
+  become: yes
+
+# SSL Certificate
+# @ToDo: Handle Manual SSL certificates
+#        (currently we only handle Let's Encrypt free/automatic DV certificates)
+# NB Use --staging when developing
+# Needs to be before prod.conf replaces default, otherwise nginx fails to start
+- name: Use Certbot to request an SSL certificate (Prod)
+  command: certbot --nginx -n --agree-tos --email webmaster@{{ sitename }} -d {{ sitename }}
+  become: yes
+  when: protocol == 'https'
+
+# Configure nginx
+- name: Cross-instance Configuration (gzip_vary)
+  replace:
+    path: /etc/nginx/nginx.conf
+    regexp: '# gzip_vary on;'
+    replace: 'gzip_vary on;'
+  become: yes
+
+- name: Cross-instance Configuration (gzip_proxied)
+  replace:
+    path: /etc/nginx/nginx.conf
+    regexp: '# gzip_proxied any;'
+    replace: 'gzip_proxied expired no-cache no-store private auth;'
+  become: yes
+
+- name: Cross-instance Configuration (gzip_types)
+  replace:
+    path: /etc/nginx/nginx.conf
+    regexp: '# gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml\+rss text/javascript;'
+    replace: 'gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;'
+  become: yes
+
+- name: Cross-instance Configuration (gzip_min_length)
+  lineinfile:
+    path: /etc/nginx/nginx.conf
+    insertbefore: '^\sgzip_proxied'
+    line: "\tgzip_min_length 10240;" # Double quotes to get the tab working
+  become: yes
+
+- name: Deleting default configuration
+  file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  become: yes
+
+- name: Creating instance configuration
+  template: src=conf.j2 dest=/etc/nginx/sites-available/{{ type }}.conf
+  become: yes
+  when: protocol == 'https'
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Creating instance configuration
+  template: src=conf_nossl.j2 dest=/etc/nginx/sites-available/{{ type }}.conf
+  become: yes
+  when: protocol == 'http'
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Enabling Site
+  file:
+    src: /etc/nginx/sites-available/{{ type }}.conf
+    dest: /etc/nginx/sites-enabled/{{ type }}.conf
+    state: link
+  become: yes
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Restart nginx
+  service: name=nginx state=restarted
+  become: yes
+  tags:
+    - test
+    - demo
+    - setup
+
+# Needs to be after instance.conf in-place
+- name: Use Certbot to request an SSL certificate (post-Prod)
+  # We can use the production site's webserver configuration to allow validation
+  command: certbot --nginx -n --expand -d {{ all_sites }}
+  become: yes
+  when: (type != 'prod') and
+        (protocol == 'https')
+  tags:
+    - test
+    - demo
+    - setup
+

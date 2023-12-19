@@ -1,0 +1,82 @@
+---
+# SmartHost configuration
+# e.g. AWS SES / SendGrid
+# Configuration guided by https://docs.aws.amazon.com/ses/latest/DeveloperGuide/send-email-exim.html
+
+# We start with the default upstream config rather than the Debian one
+# https://wiki.debian.org/Exim
+- name: Copy upstream exim.conf
+  copy:
+    src: /usr/share/doc/exim4-base/examples/example.conf.gz
+    dest: /etc/exim4/example.conf.gz
+    remote_src: yes
+  become: yes
+
+- name: Extract upstream exim.conf
+  command: gunzip -f /etc/exim4/example.conf.gz
+  args:
+    chdir: /etc/exim4
+  become: yes
+
+- name: Rename exim.conf
+  copy:
+    src: /etc/exim4/example.conf
+    dest: /etc/exim4/exim4.conf
+    remote_src: yes
+  become: yes
+
+- name: Set primary_hostname & set some options to empty value to avoid warnings
+  lineinfile:
+    path: /etc/exim4/exim4.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+    backrefs: yes
+  loop:
+    - { regexp: '^# primary_hostname =', line: 'primary_hostname = {{ sitename }}' }
+    # Set options to empty value to avoid warnings
+    - { regexp: '^# keep_environment = \^LDAP', line: 'keep_environment =' }
+    - { regexp: '^# tls_advertise_hosts = *', line: 'tls_advertise_hosts =' }
+  become: yes
+
+- name: Configure Router
+  blockinfile:
+    path: /etc/exim4/exim4.conf
+    insertafter: 'begin routers'
+    marker: "# {mark} ANSIBLE MANAGED BLOCK Router"
+    block: |
+      send_via_smart_host:
+        driver = manualroute
+        domains = ! +local_domains
+        transport = smart_host_smtp
+        route_list = * {{ smart_host }};
+  become: yes
+
+- name: Configure Transport
+  blockinfile:
+    path: /etc/exim4/exim4.conf
+    insertafter: 'begin transports'
+    marker: "# {mark} ANSIBLE MANAGED BLOCK Transport"
+    block: |
+      smart_host_smtp:
+        driver = smtp
+        port = 587
+        hosts_require_auth = *
+        hosts_require_tls = *
+  become: yes
+
+- name: Configure Authenticator
+  blockinfile:
+    path: /etc/exim4/exim4.conf
+    insertafter: 'begin authenticators'
+    marker: "# {mark} ANSIBLE MANAGED BLOCK Authenticator"
+    block: |
+      smarthost_login:
+        driver = plaintext
+        public_name = LOGIN
+        client_send = : {{ smtp_username }} : {{ smtp_password }}
+  become: yes
+
+- name: Restart Exim Service
+  service: name=exim4 state=restarted
+  become: yes

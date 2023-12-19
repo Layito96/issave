@@ -1,0 +1,40 @@
+---
+# Install Admin Tools
+# state=present not state=latest as we don't want to upgrade accidentally
+- name: Install Admin Tools
+  apt:
+    name: ['iptables',
+           'sudo',
+           ]
+    state: present
+    update_cache: yes # update-cache=yes is the equivalent of apt-get update
+  become: yes
+
+- name: Installing Dependencies
+  apt:
+    name: ['libodbc1', # Needed for Web2Py
+           ]
+    state: present
+    update_cache: yes # update-cache=yes is the equivalent of apt-get update
+
+- name: Installing Dependencies (Debian 10 or 11)
+  apt:
+    name: ['python3-dateutil',
+           'python3-lxml',
+           ]
+    state: present
+    update_cache: yes
+  when: (ansible_distribution_major_version == '10') or 
+        (ansible_distribution_major_version == '11')
+
+- name: Installing Dependencies (Debian 7, 8 or 9)
+  apt:
+    name: ['python-dateutil',
+           'python-lxml',
+           ]
+    state: present
+    update_cache: yes
+  when: (ansible_distribution_major_version == '7') or 
+        (ansible_distribution_major_version == '8') or
+        (ansible_distribution_major_version == '9')
+

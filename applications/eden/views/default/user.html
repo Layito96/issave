@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+{{theme_styles=response.s3.theme_styles}}
+{{=s3base.s3_include_debug_css()}}
+<!-- s3base.s3_include_debug_css fait reference a module/template/default/css.cfg -->
+{{include "scripts_top.html"}}
+{{include "interlinkdesignhome.css.html"}}
+{{include "testfoundation.css.html"}}
+</head>
+<body>
+<!--########################START HERE#########################-->
+
+ <!-- container section start -->
+  <section id="container" >
+    <!--header start-->
+
+    <header class="headbg">
+      
+
+       <!--logo start-->
+      <a  href="index.html"><i><img class="logoA" src="/{{=appname}}/static/themes/{{=theme_styles}}/interlinkdesign/img/logo.png"></i></a>
+      
+      <!--logo end-->
+
+       </header>
+    <!--header end-->
+  
+    
+    <!--main content start-->
+    <section id="main-content" >
+      <section class="wrapper" >
+
+        <!-- page start-->
+         <div class="container">
+
+            <div class="row no-gutter">
+              <div class="col-md-5">
+                <div >
+				  <img class="c1 center" src="/{{=appname}}/static/themes/{{=theme_styles}}/interlinkdesign/img/bigicon.png" alt="bigicon">
+                </div>
+              </div>
+
+
+              <div class="col-md-4">
+                <div >
+
+                      <div>
+                          <p class="nn">Bienvenue sur votre plateforme <br>  de gestion et suivi medicale</p>
+                              <!--<div class="form-group">
+                                <input type="email" class="form-control dd lt" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Identifant ou email">
+
+                              </div>
+                              <div class="form-group">
+                                <input type="password" class="form-control dd lt" id="exampleInputPassword1" placeholder="Mot de passe">
+                              </div>
+                              <a href=""><p class="ct">Connexion</p></a>-->
+							  <div id='home'>
+                                   <!--{{try:}}{{=H2(title)}}{{except:}}{{pass}}-->
+                                   {{try:}}{{=XML(header)}}{{except:}}{{pass}}
+                                   {{if request.args(0) == "login":}}
+                                   {{include "auth/_login.html"}}
+                                   {{elif request.args(0) == "register":}}
+                                   {{include "auth/_register.html"}}
+                                   {{else:}}
+                                   <div class='form-container'>
+                                       {{=form}}
+                                   </div>
+                                {{pass}}
+                              </div>
+                      
+                      </div>
+                    
+                </div>
+              </div>
+              
+            </div>            
+          </div>
+
+        <!-- page end-->
+      </section>
+    </section>
+    <!--main content end-->
+
+
+
+
+
+	<!-- container section end -->
+ </section>
+</body>
+
+ <footer>
+		<img style="float: right; margin-right: 50px; margin-top: 17px;" src="/{{=appname}}/static/themes/{{=theme_styles}}/interlinkdesign/img/fir.png">
+		<img style="float: left; margin-left: 50px; margin-top: 8px;" src="/{{=appname}}/static/themes/{{=theme_styles}}/interlinkdesign/img/fil.png">
+		<div style="margin: 0 auto;max-width: 200px;height: 100px;border-radius: 3px;margin-top: 17px; color:#94530d" >Copyright ©  <a style="color:#ba6811" href="http://interlink.mr/">Interlink</a> 2023.</p></div>
+ </footer>
+</html>
+
+

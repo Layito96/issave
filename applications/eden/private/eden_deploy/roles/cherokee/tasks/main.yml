@@ -1,0 +1,106 @@
+---
+# Run Debian-specific tasks
+-  import_tasks: debian.yml
+   when: ansible_distribution == "Debian" # Doesn't include Ubuntu (ansible_os_family does))
+
+#- name: Clone Repo
+#  git: repo=http://github.com/cherokee/webserver.git dest=/tmp/webserver
+
+- name: Download & Unzip
+  unarchive:
+    src: https://github.com/cherokee/webserver/archive/master.zip
+    dest: /tmp
+    remote_src: yes
+
+- name: Build
+  command: "{{ item }}"
+  args:
+    #chdir: /tmp/webserver
+    chdir: /tmp/webserver-master
+  loop:
+    - ./autogen.sh --prefix=/usr --localstatedir=/var --sysconfdir=/etc
+    - make
+    - make install
+
+- name: Create log dir
+  file: path=/var/log/cherokee state=directory owner=www-data group=www-data
+
+- name: Create graphs dir
+  file: path=/var/lib/cherokee/graphs state=directory owner=www-data group=www-data
+
+- name: Copy init.d script
+  copy: src=cherokee dest=/etc/init.d/cherokee mode=755
+
+- name: update-rc.d
+  command: update-rc.d cherokee defaults
+
+# @ToDo: Handle Manual SSL certificates
+#        (currently we only handle Let's Encrypt free/automatic DV certificates)
+# NB Use --staging when developing
+- name: Use Certbot to request an SSL certificate (Prod)
+  command: certbot certonly -n --agree-tos --email webmaster@{{ sitename }} --standalone -d {{ sitename }}
+  become: yes
+
+- name: Use Certbot to request an SSL certificate (post-Prod)
+  # We can use the production site's webserver configuration to allow validation
+  command: certbot certonly -n --expand --webroot -w /var/www -d {{ all_sites }}
+  become: yes
+  when: type != 'prod'
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Creating SSL symlinks
+  file: src=/etc/letsencrypt/live/{{ sitename }}/{{ item }}.pem dest=/etc/cherokee/{{ item }}.pem state=link
+  loop:
+    - fullchain
+    - privkey
+
+- name: Copying cherokee.conf
+  template: src=cherokee.conf dest=/etc/cherokee/cherokee.conf
+
+# Includes redirection of http:// to https://
+# http://cherokee-project.com/doc/cookbook_http_to_https.html
+- name: Copying update_cherokee.py
+  template: src=update_cherokee_{{ type }}.py dest=/tmp/update_cherokee.py
+  # File may exist already & be owned by root
+  become: yes
+  tags:
+    - demo
+    - test
+    - setup
+
+# @ToDo: Make this idempotent
+- name: Executing update_cherokee
+  command: python update_cherokee.py chdir=/tmp/
+  become: yes
+  tags:
+    - test
+    - demo
+    - setup
+
+- name: Copy maintenance.html
+  copy: src=maintenance.html dest=/var/www/maintenance.html
+
+# Prod
+- name: Start Cherokee
+  service: name=cherokee state=restarted
+
+# Starts ok if not yet started, but doesn't restart after stopping. Reload works fine though
+- name: Reload Cherokee
+  command: /etc/init.d/cherokee reload
+  become: yes
+  when: type != 'prod'
+  tags:
+    - test
+    - demo
+    - setup
+
+# Modify certbot crontab to add pre-hook & post-hook to ensure that WebServer is restarted when certificate is renewed
+# NB Using the hook directories would be less invasive, however these aren't available in the 0.10.x version of certbot that we use
+- name: Copy cron script
+  copy:
+    src: cron_certbot_renew
+    dest: /etc/cron.d/certbot
+    mode: 644

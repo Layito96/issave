@@ -1,0 +1,702 @@
+# -*- coding: utf-8 -*-
+
+""" Sahana Eden GUI Layouts (HTML Renderers)
+
+    @copyright: 2012-2021 (c) Sahana Software Foundation
+    @license: MIT
+
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use,
+    copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the
+    Software is furnished to do so, subject to the following
+    conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+    OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT
+    HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+    WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
+    OTHER DEALINGS IN THE SOFTWARE.
+
+    TODO:
+        - complete layout implementations
+        - render "selected" (flag in item)
+"""
+
+__all__ = ("S3MainMenuDefaultLayout",
+           "MM",
+           "S3OptionsMenuDefaultLayout",
+           "M",
+           "S3OAuthMenuDefaultLayout",
+           "MOA",
+           "S3MenuSeparatorDefaultLayout",
+           "SEP",
+           "S3BreadcrumbsLayout",
+           "S3PopupLink",
+           "homepage",
+           )
+
+from gluon import current, URL, \
+    A, DIV, H3, IMG, INPUT, LABEL, LI, SPAN, TAG, UL
+
+from s3 import S3NavigationItem, S3CRUD, ICON
+from s3theme import NAV
+
+# =============================================================================
+
+
+class S3MainMenuDefaultLayout(S3NavigationItem):
+    """
+        Application Main Menu Layout
+
+        Classes use Foundation's Top-Bar Component, which wraps
+                    Foundation's Menu component
+            https://get.foundation/sites/docs/menu.html
+            https://get.foundation/sites/docs/top-bar.html
+    """
+
+    # Use the layout method of this class in templates/<theme>/layouts.py
+    # if it is available at runtime (otherwise fallback to this layout):
+    OVERRIDE = "S3MainMenuLayout"
+
+    @staticmethod
+    def layout(item):
+        """ Layout Method (Item Renderer) """
+
+        # Manage flags: hide any disabled/unauthorized items
+        if not item.authorized and not item.opts.always_display:
+            item.enabled = False
+            item.visible = False
+        elif item.enabled is None or item.enabled:
+            item.enabled = True
+            item.visible = True
+
+        if item.enabled and item.visible:
+
+            items = item.render_components()
+            if item.parent is not None:
+
+                if item.attr._class:
+                    classes = item.attr._class.split(" ")
+                else:
+                    classes = []
+
+                if item.parent.parent is None:
+                    # Item at the top-level?
+                    toplevel = True
+                    if item.opts.right:
+                        classes.append("menu-right")
+                else:
+                    toplevel = False
+
+                if item.components:
+                    # Menu item with Dropdown
+                    if item.get_first(enabled=True):
+                        # Prevent FoUC
+                        classes.append("is-dropdown-submenu-parent")
+                        _class = " ".join(classes)
+                        return LI(A(item.label,
+                                    _href=item.url(),
+                                    _id=item.attr._id,
+                                    ),
+                                  UL(items,
+                                     _class="menu",
+                                     ),
+                                  _class=_class,
+                                  )
+                else:
+                    # Menu item without Drop-Down
+                    if toplevel:
+                        item_url = item.url()
+                        if item_url == URL(c="default", f="index"):
+                            classes.append("menu-home")
+                        if item.selected:
+                            classes.append("active")
+                        _class = " ".join(classes)
+                        icon = item.opts.icon
+                        if icon:
+                            label = LABEL(ICON(icon), item.label)
+                        else:
+                            label = item.label
+                        return LI(A(label,
+                                    _href=item_url,
+                                    _id=item.attr._id,
+                                    _target=item.attr._target,
+                                    ),
+                                  _class=_class,
+                                  )
+                    else:
+                        # Submenu item
+                        if isinstance(item.label, dict):
+                            if "id" in item.label:
+                                return S3MainMenuDefaultLayout.checkbox_item(item)
+                            elif "name" in item.label:
+                                label = item.label["name"]
+                            else:
+                                return None
+                        else:
+                            label = item.label
+                        link = A(label,
+                                 _href=item.url(),
+                                 _id=item.attr._id,
+                                 _target=item.attr._target,
+                                 )
+                        _class = " ".join(classes)
+                        return LI(link,
+                                  _class=_class,
+                                  )
+            else:
+                # The main menu itself
+                T = current.T
+                settings = current.deployment_settings
+
+                # CRMT/WACOP used this:
+                # if item.opts.title_area:
+                #    # Custom override
+                #    title_area = item.opts.title_area
+                # else:
+                # Standard: render a menu logo
+                logo = settings.get_ui_menu_logo()
+                if logo is None:
+                    # Render an icon
+                    logo = SPAN(settings.get_system_name_short(),
+                                _class="logo",
+                                )
+                elif isinstance(logo, str):
+                    # Assume image-URL
+                    logo = IMG(_src=logo,
+                               _class="logo",
+                               _alt=settings.get_system_name_short(),
+                               )
+                # else:
+                    # use as-is (assume HTML or T())
+                title_area = A(logo,
+                               _href=URL(c="default", f="index"),
+                               _title=T("Homepage"),
+                               )
+
+                # Arrange items left/right
+                right = []
+                left = []
+                for item in items:
+                    if "menu-right" in item["_class"]:
+                        item.remove_class("menu-right")
+                        right.append(item)
+                    else:
+                        left.append(item)
+                right.reverse()
+
+                # Reverse if right-to-left
+                if current.response.s3.rtl:
+                    right, left = left, right
+
+                left = UL(title_area,
+                          left,
+                          _class="menu dropdown",
+                          )
+                left["_data-dropdown-menu"] = ""
+                right = UL(right,
+                           _class="menu dropdown",
+                           )
+                right["_data-dropdown-menu"] = ""
+
+                # Build top-bar HTML
+                return NAV(DIV(left,
+                               _class="top-bar-left",
+                               ),
+                           DIV(right,
+                               _class="top-bar-right",
+                               ),
+                           _class="top-bar",
+                           )
+        else:
+            return None
+
+    # ---------------------------------------------------------------------
+    @staticmethod
+    def checkbox_item(item):
+        """ Render special active items """
+
+        name = item.label
+        link = item.url()
+        _id = name["id"]
+        if "name" in name:
+            _name = name["name"]
+        else:
+            _name = ""
+        if "value" in name:
+            _value = name["value"]
+        else:
+            _value = False
+        if "request_type" in name:
+            _request_type = name["request_type"]
+        else:
+            _request_type = "ajax"
+        if link:
+            if _request_type == "ajax":
+                _onchange = '''var val=$('#%s:checked').length;$.getS3('%s'+'?val='+val,null,false,null,false,false)''' % \
+                    (_id, link)
+            else:
+                # Just load the page. Use this if the changed menu
+                # item should alter the contents of the page, and
+                # it's simpler just to load it.
+                _onchange = "location.href='%s'" % link
+        else:
+            _onchange = None
+        return LI(A(INPUT(_type="checkbox",
+                          _id=_id,
+                          _onchange=_onchange,
+                          value=_value,
+                          ),
+                    "%s" % _name,
+                    _nowrap="nowrap",
+                    ),
+                  _class="menu-toggle",
+                  )
+
+# =============================================================================
+
+
+class S3OptionsMenuDefaultLayout(S3NavigationItem):
+    """
+        Controller Options Menu Layout
+
+        Classes use Foundation's Menu component
+            https://get.foundation/sites/docs/menu.html
+    """
+
+    # Use the layout method of this class in templates/<theme>/layouts.py
+    # if it is available at runtime (otherwise fallback to this layout):
+    OVERRIDE = "S3OptionsMenuLayout"
+
+    @staticmethod
+    def layout(item):
+        """ Layout Method (Item Renderer) """
+
+        # Manage flags: hide any disabled/unauthorized items
+        if not item.authorized:
+            enabled = False
+            visible = False
+        elif item.enabled is None or item.enabled:
+            enabled = True
+            visible = True
+
+        if enabled and visible:
+            if item.parent is not None:
+                if item.enabled and item.authorized:
+
+                    attr = {"_id": item.attr._id}
+                    if item.attr._onclick:
+                        attr["_onclick"] = item.attr._onclick
+                    else:
+                        attr["_href"] = item.url()
+
+                    if item.components:
+                        # Submenu
+                        items = item.render_components()
+
+                        # Hide submenus which have no active links
+                        if not items and not item.link:
+                            return None
+
+                        _class = ""
+                        if item.parent.parent is None and item.selected:
+                            _class = "active"
+
+                        section = [LI(A(item.label,
+                                        **attr
+                                        ),
+                                      _class="heading %s" % _class,
+
+                                      ),
+                                   ]
+
+                        # if items:
+                        #     section.append(UL(items,
+                        #                       _class="menu vertical nested",  # https://get.foundation/sites/docs/menu.html
+                        #                       ))
+                        # return section
+                        if items:
+                            # Check if you want to add a new <ul> to a specific <li>
+                            # if item.label == "Staff":  # Replace "Specific_Label" with the label of the <li> where you want to append the <ul>
+                            #     submenu = UL(
+                            #         items, _class="menu vertical nested")
+                            #     # Append the new <ul> element to the specific <li>
+                            #     section[0].append(submenu)
+                            # else:
+                            # section.append(
+                            #     UL(items, _class="menu vertical nested"))
+                            submenu = UL(
+                                items, _class="menu vertical nested")
+                            # Append the new <ul> element to the specific <li>
+                            section[0].append(submenu)
+
+                        return section
+
+                    else:
+                        # Submenu item
+                        if item.parent.parent is None:
+                            _class = "heading"
+                        else:
+                            _class = ""
+
+                        return LI(A(item.label,
+                                    **attr
+                                    ),
+                                  _class=_class,
+                                  )
+            else:
+                # Main menu
+                items = item.render_components()
+                return DIV(UL(items,
+                              _id="main-sub-menu",
+                              _class="menu vertical",  # https://get.foundation/sites/docs/menu.html
+                              ),
+                           _id="main-staff-menu",
+                           )
+
+        else:
+            return None
+
+# =============================================================================
+
+
+class S3OAuthMenuDefaultLayout(S3NavigationItem):
+    """ OAuth Menu Layout """
+
+    # Use the layout method of this class in templates/<theme>/layouts.py
+    # if it is available at runtime (otherwise fallback to this layout):
+    OVERRIDE = "S3OAuthMenuLayout"
+
+    @staticmethod
+    def layout(item):
+        """ Layout Method (Item Renderer) """
+
+        if item.enabled:
+            if item.parent is not None:
+                output = A(SPAN(item.label),
+                           _class="zocial %s" % item.opts.api,
+                           _href=item.url(),
+                           _title=item.opts.get("title", item.label),
+                           )
+            else:
+                items = item.render_components()
+                if items:
+                    output = DIV(items,
+                                 _class="zocial-login",
+                                 )
+                else:
+                    # Hide if empty
+                    output = None
+        else:
+            # Hide if disabled
+            output = None
+
+        return output
+
+# =============================================================================
+
+
+class S3MenuSeparatorDefaultLayout(S3NavigationItem):
+    """ Simple menu separator """
+
+    # Use the layout method of this class in templates/<theme>/layouts.py
+    # if it is available at runtime (otherwise fallback to this layout):
+    OVERRIDE = "S3MenuSeparatorLayout"
+
+    @staticmethod
+    def layout(item):
+        """ Layout Method (Item Renderer) """
+
+        if item.parent is not None:
+            return LI(_class="divider hide-for-small")
+        else:
+            return None
+
+
+# =============================================================================
+# Import menu layouts from template (if present)
+#
+MM = S3MainMenuDefaultLayout
+M = S3OptionsMenuDefaultLayout
+MOA = S3OAuthMenuDefaultLayout
+SEP = S3MenuSeparatorDefaultLayout
+
+# =============================================================================
+
+
+class S3BreadcrumbsLayout(S3NavigationItem):
+    """ Breadcrumbs layout """
+
+    @staticmethod
+    def layout(item):
+
+        if item.parent is None:
+            items = item.render_components()
+            return DIV(UL(items),
+                       _class="breadcrumbs",
+                       )
+        else:
+            if item.is_last():
+                _class = "highlight"
+            else:
+                _class = "ancestor"
+            return LI(A(item.label,
+                        _href=item.url(),
+                        _class=_class,
+                        ),
+                      )
+
+# =============================================================================
+
+
+class S3HomepageMenuLayout(S3NavigationItem):
+    """
+        Layout for menus on default homepage
+    """
+
+    @staticmethod
+    def layout(item):
+        """ Layout Method (Item Renderer) """
+
+        # Manage flags: hide any disabled/unauthorized items
+        if not item.authorized and not item.opts.always_display:
+            item.enabled = False
+            item.visible = False
+        elif item.enabled is None or item.enabled:
+            item.enabled = True
+            item.visible = True
+
+        if item.enabled and item.visible:
+            items = item.render_components()
+
+            if item.parent is None:
+                # The menu itself
+
+                number_of_links = 0
+
+                components = []
+                append = components.append
+                for submenu in items:
+                    append(submenu)
+                    number_of_links += len(submenu.elements("a"))
+
+                # Hide the entire menu if it doesn't contain any links
+                if not number_of_links:
+                    return None
+
+                title = H3(item.label) if item.label else ""
+                menu = DIV(title,
+                           DIV(TAG[""](components),
+                               _class="menu icons",
+                               ),
+                           _id=item.attr._id,
+                           _class=item.attr._class,
+                           )
+
+                return menu
+
+            else:
+                # A menu item
+                _class = item.attr._class
+                if _class:
+                    _class = "%s item" % _class
+                else:
+                    _class = "item"
+                _id = item.attr._id
+
+                icon = item.opts.icon
+                if icon:
+                    label = TAG[""](ICON(icon),
+                                    " ",
+                                    SPAN(item.label),
+                                    )
+                else:
+                    label = item.label
+                return A(label,
+                         _class=_class,
+                         _href=item.url(),
+                         _id=_id,
+                         )
+        else:
+            return None
+
+# =============================================================================
+
+
+class S3PopupLink(S3NavigationItem):
+    """
+        Links in form fields comments to show a form for adding
+        a new foreign key record.
+    """
+
+    def __init__(self,
+                 label=None,
+                 c=None,
+                 f=None,
+                 t=None,
+                 m="create",
+                 args=None,
+                 vars=None,
+                 info=None,
+                 title=None,
+                 tooltip=None,
+                 _id=None,
+                 ):
+        """
+            Args:
+                c: the target controller
+                f: the target function
+                t: the target table (defaults to c_f)
+                m: the URL method (will be appended to args)
+                args: the argument list
+                vars: the request vars (format="popup" will be added automatically)
+                label: the link label (falls back to label_create)
+                info: hover-title for the label
+                title: the tooltip title
+                tooltip: the tooltip text
+                _id: the HTML ID of the button
+        """
+
+        if label is None:
+            label = title
+        if info is None:
+            info = title
+
+        if c is None:
+            # Fall back to current controller
+            c = current.request.controller
+
+        if label is None:
+            if t is None:
+                t = "%s_%s" % (c, f)
+            if m == "create":
+                # Fall back to label_create
+                label = S3CRUD.crud_string(t, "label_create")
+            elif m == "update":
+                # Fall back to label_update
+                label = S3CRUD.crud_string(t, "label_update")
+
+        super(S3PopupLink, self).__init__(label,
+                                          c=c,
+                                          f=f,
+                                          t=t,
+                                          m=m,
+                                          args=args,
+                                          vars=vars,
+                                          info=info,
+                                          title=title,
+                                          tooltip=tooltip,
+                                          mandatory=True,
+                                          _id=_id,
+                                          )
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def layout(item):
+        """ Layout for popup link """
+
+        if not item.authorized:
+            return None
+
+        if current.deployment_settings.get_ui_use_button_icons():
+            label = (ICON("add"), item.label)
+        else:
+            label = item.label
+
+        # @ToDo Ensure that if we are in an inline component, these links are different for each of the 3
+        _id = item.attr._id or "%s_add" % item.function
+
+        popup_link = A(label,
+                       _href=item.url(format="popup"),
+                       _class="s3_add_resource_link",
+                       _id=_id,
+                       _target="top",
+                       _title=item.opts.info,
+                       )
+
+        tooltip = item.opts.tooltip
+        if tooltip is not None:
+            ttip = DIV(_class="tooltip",
+                       _title="%s|%s" % (item.opts.title,
+                                         tooltip,
+                                         ),
+                       )
+        else:
+            ttip = ""
+
+        return TAG[""](popup_link, ttip)
+
+    # -------------------------------------------------------------------------
+    @staticmethod
+    def inline(item):
+        """ Render this link for an inline component """
+
+        if not item.authorized:
+            return None
+
+        _id = item.attr._id or "%s_%s_add" % (item.vars["caller"],
+                                              item.function,
+                                              )
+
+        popup_link = A(item.label,
+                       _href=item.url(format="popup"),
+                       _class="s3_add_resource_link action-lnk",
+                       _id=_id,
+                       _target="top",
+                       _title=item.opts.info,
+                       )
+
+        return DIV(popup_link,
+                   _class="s3_inline_add_resource_link",
+                   )
+
+# =============================================================================
+
+
+def homepage(module=None, *match, **attr):
+    """
+        Shortcut for module homepage menu items using the MM layout,
+        retrieves the module's nice name.
+
+        Args:
+            module: the module's prefix (controller)
+            match: additional prefixes
+            attr: attributes for the navigation item
+    """
+
+    settings = current.deployment_settings
+    all_modules = settings.modules
+
+    layout = S3MainMenuDefaultLayout
+    c = [module] + list(match)
+
+    if "name" in attr:
+        name = attr["name"]
+        attr.pop("name")
+    else:
+        if module is None:
+            module = "default"
+        if module in all_modules:
+            m = all_modules[module]
+            name = m.name_nice
+        else:
+            name = module
+
+    if "f" in attr:
+        f = attr["f"]
+        del attr["f"]
+    else:
+        f = "index"
+
+    return layout(name, c=c, f=f, **attr)
+
+# END =========================================================================
