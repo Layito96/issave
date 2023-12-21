@@ -14,6 +14,11 @@ class S3MainMenuLayout(S3NavigationItem):
         """ Custom Layout Method """
 
         # Manage flags: hide any disabled/unauthorized items
+
+        if item.url() == URL(c="appadmin", f="index") or item.url() == URL(c="default", f="rapid") or item.url() == URL(c="admin", f="errors"):
+            item.enabled = False
+            item.visible = False
+        
         if not item.authorized:
             item.enabled = False
             item.visible = False
@@ -44,6 +49,8 @@ class S3MainMenuLayout(S3NavigationItem):
                     # Menu item with Dropdown
                     if item.get_first(enabled=True, link=True):
                         _href = item.url()
+                        print("_href", _href)
+                        # print('URL(c="admin", f="index")',URL(c="admin", f="index"))
                         # print(_href )
                         # print(item.label)
                         src = "";
@@ -51,7 +58,7 @@ class S3MainMenuLayout(S3NavigationItem):
                         if _href == URL(c="admin", f="index"):
                             src = "/eden/static/themes/SAFIRE/interlinkdesign/img/admin.png";
                             title = "Administration";
-                        if _href == URL(c="default", f="contact"):
+                        if _href == URL(c="default", f="help"):
                             src = "/eden/static/themes/SAFIRE/interlinkdesign/img/help.png";
                             title = "Aide";
                         if _href == URL(c="event", f="more"):
@@ -59,8 +66,11 @@ class S3MainMenuLayout(S3NavigationItem):
                             title = "Plus d'option";
                             _href = None
                         if _href == URL(c="default", f="user"):
+                            print("user already")
                             src = "/eden/static/themes/SAFIRE/interlinkdesign/img/user.png";
                             _href = None
+                        if _href is  None:
+                            src = "/eden/static/themes/SAFIRE/interlinkdesign/img/user.png";
                         # item_url = item.url()
                         # print(item_url)
                         # if item_url == URL(c="event", f="more"):
@@ -86,7 +96,12 @@ class S3MainMenuLayout(S3NavigationItem):
                                     )
                 else:
                     # Menu item without Drop-Down
+
+                    print("_href not component", item.url())
+
                     if toplevel:
+                        print("item",item.url())
+
                         item_url = item.url()
                         if item_url == URL(c="default", f="index"):
                             classes.append("menu-home")
