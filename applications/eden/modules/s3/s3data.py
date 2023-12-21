@@ -288,7 +288,7 @@ class S3DataTable:
                    '''i18n.infoEmpty="%s"''' % T("Affichage 0 à 0 de 0 entrées"),
                    '''i18n.infoFiltered="%s"''' % T("(filtré à partir de _MAX_ total entrées)"),
                    '''i18n.infoThousands="%s"''' % current.deployment_settings.get_L10n_thousands_separator(),
-                   '''i18n.lengthMenu="%s"''' % (T("afficher %(number)s entrées") % {"number": "_MENU_"}),
+                   '''i18n.lengthMenu="%s"''' % (T("Afficher %(number)s Entrées") % {"number": "_MENU_"}),
                    '''i18n.loadingRecords="%s"''' % T("En-cours"),
                    '''i18n.processing="%s"''' % T("Traitements"),
                    '''i18n.search="%s"''' % T("Rechercher"),
