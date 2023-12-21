@@ -32,7 +32,7 @@ p.legend em {
 
 .form-container form {
     padding: 5px;
-    border: #eee 1px solid;
+    /* border: #eee 1px solid; */
     position: relative;
     display: -webkit-box;
     display: -ms-flexbox;
@@ -51,7 +51,7 @@ p.legend em {
     box-shadow: 10px 10px 5px 0px rgb(235 105 12 / 75%);
     -webkit-box-shadow: 10px 10px 5px 0px rgb(175 163 156 / 15%);
     -moz-box-shadow: 10px 10px 5px 0px rgba(0, 0, 0, 0.75);
-
+    background-image: radial-gradient(circle at top left, #21529E, #14315B);
 }
 
 .form-container p {
