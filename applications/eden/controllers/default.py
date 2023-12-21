@@ -362,21 +362,21 @@ $('#login-btn').click(function(){
 
         # feedCycleTime: milliseconds before feed is reloaded (5 minutes)
         feed_control = "".join(('''
-function LoadDynamicFeedControl(){
- var feeds=[
-  ''', feeds, '''
- ]
- var options={
-  feedCycleTime:300000,
-  numResults:5,
-  stacked:true,
-  horizontal:false,
-  title:"''', str(T("News")), '''"
- }
- new GFdynamicFeedControl(feeds,'feed-control',options)
-}
-google.load('feeds','1')
-google.setOnLoadCallback(LoadDynamicFeedControl)'''))
+        function LoadDynamicFeedControl(){
+        var feeds=[
+        ''', feeds, '''
+        ]
+        var options={
+        feedCycleTime:300000,
+        numResults:5,
+        stacked:true,
+        horizontal:false,
+        title:"''', str(T("News")), '''"
+        }
+        new GFdynamicFeedControl(feeds,'feed-control',options)
+        }
+        google.load('feeds','1')
+        google.setOnLoadCallback(LoadDynamicFeedControl)'''))
 
         s3.js_global.append(feed_control)
 

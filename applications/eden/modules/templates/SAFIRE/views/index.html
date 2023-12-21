@@ -1,7 +1,9 @@
 {{extend "layout.html"}}
 <!-- <h2>{{=settings.get_system_name()}}</h2> -->
 {{=item}}
-
+{{block banner}}
+	{{include 'banner.html'}}
+{{end}}
 <div class="col-md-12 card">
     <div class="card-body card-text">
         {{try:}}{{=sit_menu}}{{except:}}{{pass}}
@@ -20,5 +22,96 @@
 <div class="col-md-12 card">
     <div class="card-body card-text">
         {{try:}}{{=aid_menu}}{{except:}}{{pass}}
+    </div>
+</div>
+
+
+<div class="col-lg-12">
+    <ul class="nav nav-tabs borderless" id="myTab" role="tablist" style="border-bottom: none;">
+        <li class="nav-item mt-1 col-sm-6 col-md-6 col-lg-6" style="margin: 0px; padding: 0px;">
+            <a class="conf-link active rounded d-flex inline-block" aria-controls="Boitiers" href="#Boitiers"
+                id="Boitiers-tab" data-toggle="tab">
+                <h5><i class="fad fa-mobile-alt"></i> Les Boitiers' </h5>
+            </a>
+        </li>
+        <li class="nav-item mt-1 col-sm-6 col-md-6 col-lg-6" style="margin: 0px; padding: 0px;">
+            <a class="conf-link rounded d-flex inline-block " aria-controls="Sims" href="#Sims" id="Sims-tab"
+                data-toggle="tab">
+                <h5> <i class="fad fa-sim-card"></i> Les Cartes Sim' </h5>
+            </a>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active p-2" id="Boitiers" role="tabpanel" aria-labelledby="Boitiers-tab">
+            <div class="row no-gutter">
+
+                <div class="justify-content-center mr-5 row col-4">
+                  
+                </div>
+                <div class="table-responsive">
+                    
+                <table id="deviceTable" class="table-stripped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th class="text-truncate" title="Nom' ">Nom' </th>
+                            <th class="text-truncate" title="EMEI' ">EMEI' </th>
+                            <th class="text-truncate" title="dernière mise à jour' ">dernière mise à jour' </th>
+                            <th class="text-truncate" title="Groupe' ">Groupe' </th>
+                            <th class="text-truncate" title="Objet' ">Objet' </th>
+                            <th class="text-truncate" title="SIM' ">SIM' </th>
+                            <th class="text-truncate" title="Model' ">Model' </th>
+                            <th class="text-truncate" title="Status' ">Status' </th>
+
+                            <th class="text-truncate" title="Temps expiration' ">Temps expiration' </th>
+                            <th class="d-flex justify-content-center">
+                                    <span>Action' </span>
+                                   
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <tr></tr>
+                    </tbody>
+
+                </table>
+
+                </div>
+
+
+            </div>
+
+        </div>
+
+
+        <!-- SIM -->
+        <div class="tab-pane fade in" id="Sims" role="tabpanel" aria-labelledby="Sims-tab">
+        
+
+                <table id="simTable" class="display table-stripped" style="width:100%">
+                    <thead>
+                        <tr>
+                            <th>Numero' </th>
+                            <th>Credit' </th>
+                            <th>Date de charge' </th>
+                            <th>Date fin de charge' </th>
+                            <th>Date ajout' </th>
+                            <!-- <th>Date ajout' </th> -->
+                            <th>Appareil' </th>
+                            <th>Action' </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        
+                        <tr></tr>
+
+                    </tbody>
+
+                </table>
+
+
+
+            </div>
+
+        </div>
     </div>
 </div>

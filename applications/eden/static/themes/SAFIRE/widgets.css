@@ -1586,7 +1586,15 @@ ul.x-tree-root-ct {
 .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all,
 .form-container .ui-multiselect.ui-widget.ui-state-default.ui-corner-all {
     display: block;
-    min-width: 220px;
+    /* min-width: 220px; */
+    min-width: 100% !important;
+
+}
+
+.text-filter{
+    min-width: 100% !important;
+
+
 }
 
 .filter-form .ui-multiselect.ui-widget.ui-state-default.ui-corner-all:first-of-type,
@@ -1596,7 +1604,9 @@ ul.x-tree-root-ct {
 
 .ui-selectmenu-button,
 .ui-multiselect-menu {
-    min-width: 220px;
+    /* min-width: 220px; */
+    min-width: 50% !important;
+
 }
 
 /* Don't display the default widget, only the multiselect generated widget is displayed */

@@ -1,0 +1,30 @@
+<div class="row col-lg-12">
+    <div class="dd hide-item">
+
+        <strong>
+            {{import datetime}}
+            {{now = datetime.datetime.now()}}
+            {{=now.strftime("%d/%m/%Y %H:%M:%S")}}
+        </strong>
+    </div>
+    <div class="big-box">
+        <div class="hide-item">
+            <img class="boxlogo "
+                src="/{{=appname}}/static/themes/{{=theme_styles}}/interlinkdesign/img/logo2.png">
+        </div>
+        <div class="tt">{{try:}} Bonjour {{=auth.user.first_name}}{{except:}}{{pass}}</div>
+        <div class="nn">
+            {{try:}}
+            {{=title}}
+            {{except:}}
+            {{=response.title or settings.get_system_name_short()}}
+            {{pass}}
+        </div>
+
+        <div class="md-form mt-0">
+            <input class="form-control"
+                style="width: 260px; background: #FF8C00; opacity: .5; color: white; border-radius: 0px;"
+                type="text" placeholder="Rechercher" aria-label="Search">
+        </div>
+    </div>
+</div>

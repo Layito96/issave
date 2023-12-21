@@ -65,3 +65,4 @@ logs/
 __pycache__/
 build/*
 parameters_*.py
+httpserver.log
