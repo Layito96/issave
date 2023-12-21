@@ -10104,8 +10104,8 @@ textarea {
 table td,
 table tr,
 table th {
-  background: transparent !important;
-  /* background: none; */
+  /* background: transparent !important; */
+  background: none;
 }
 
 .olMapViewport {

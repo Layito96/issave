@@ -41,7 +41,7 @@ settings.database.database = "issaav"
 settings.database.username = "root"
 # Uncomment to set the password
 # NB Web2Py doesn't like passwords with an @ in them
-settings.database.password = "12345"
+settings.database.password = "Sarr.1896"
 # Uncomment to use a different pool size
 # settings.database.pool_size = 30
 # Do we have a spatial DB available? (currently supports PostGIS. Spatialite to come.)
