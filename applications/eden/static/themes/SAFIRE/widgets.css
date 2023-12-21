@@ -292,7 +292,7 @@ textarea.richtext {
 
 .dataTable tr.even td,
 .dataTable tr.odd td {
-    border: 1px solid #ccc;
+    /* border: 1px solid #ccc; */
     padding: 4px 10px;
 }
 
@@ -1591,7 +1591,7 @@ ul.x-tree-root-ct {
 
 }
 
-.text-filter{
+.text-filter {
     min-width: 100% !important;
 
 

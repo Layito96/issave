@@ -586,8 +586,9 @@
    /* min-width: 100%; */
 
  }
- .generic-widget{
-  min-width: 100% !important;
+
+ .generic-widget {
+   min-width: 100% !important;
  }
 
  /* line 251, ../../default/scss/theme/_forms.scss */
@@ -1202,7 +1203,7 @@
  table.dataTable thead th,
  table.dataTable th,
  table.dataTable td {
-   border: 1px solid #cccccc;
+   /* border: 1px solid #cccccc; */
    padding: 0.2em 1.5em 0.2em 0.5em;
  }
 
