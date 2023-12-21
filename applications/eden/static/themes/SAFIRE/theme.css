@@ -391,7 +391,10 @@
    /*amod comment*/
    /*border: 1px solid #dddddd;*/
    border-collapse: separate;
+   min-width: 100%;
  }
+
+ 
 
  /* line 102, ../../default/scss/theme/_forms.scss */
  form table.embeddedComponent td {
@@ -583,7 +586,7 @@
  .form-container .controls,
  .item-container .controls {
    display: inline-block;
-   /* min-width: 100%; */
+   min-width: 100%;
 
  }
 
@@ -608,6 +611,7 @@
  .form-container form input.string:not(.date),
  .form-container form textarea {
    margin: 0;
+   min-width: 100%;
  }
 
  /* line 265, ../../default/scss/theme/_forms.scss */
