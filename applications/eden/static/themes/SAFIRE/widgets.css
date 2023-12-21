@@ -2061,3 +2061,26 @@ body.rtl .db-config,
 body.rtl .db-configbar-right {
     float: left;
 }
+
+
+th {
+    background-color: #091A35;
+    /* z-index: -100 !important; */
+}
+
+.leaflet-infoWindow .leaflet-content p {
+    text-align: justify;
+}
+
+.table-striped>tbody>tr:nth-child(odd)>td,
+.table-striped>tbody>tr:nth-child(odd)>th {
+    background-color: rgba(255, 255, 255, 0.221) !important;
+}
+
+table.table-striped tr.odd td {
+    background-color: rgba(255, 255, 255, 0.221) !important;
+}
+
+table tbody tr.odd td {
+    background-color: rgba(255, 255, 255, 0.221) !important;
+}
