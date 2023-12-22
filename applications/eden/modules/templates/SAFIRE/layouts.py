@@ -61,14 +61,15 @@ class S3MainMenuLayout(S3NavigationItem):
                         if _href == URL(c="default", f="help"):
                             src = "/eden/static/themes/SAFIRE/interlinkdesign/img/help.png";
                             title = "Aide";
+                            _href = ''
                         if _href == URL(c="event", f="more"):
                             src = "/eden/static/themes/SAFIRE/interlinkdesign/img/more.png";
                             title = "Plus d'option";
-                            _href = None
-                        if _href == URL(c="default", f="user"):
+                            _href = ''
+                        if _href == URL(c="default", f="index"):
                             print("user already")
-                            src = "/eden/static/themes/SAFIRE/interlinkdesign/img/user.png";
-                            _href = None
+                            src = "/eden/static/themes/SAFIRE/interlinkdesign/img/lang5050.png";
+                            _href = ''
                         if _href is  None:
                             src = "/eden/static/themes/SAFIRE/interlinkdesign/img/user.png";
                         # item_url = item.url()
