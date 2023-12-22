@@ -14,8 +14,8 @@ class S3MainMenuLayout(S3NavigationItem):
         """ Custom Layout Method """
 
         # Manage flags: hide any disabled/unauthorized items
-
-        if item.url() == URL(c="appadmin", f="index") or item.url() == URL(c="default", f="rapid") or item.url() == URL(c="admin", f="errors"):
+        # supprimer certains liens unitile 
+        if item.url() == URL(c="appadmin", f="index") or item.url() == URL(c="default", f="rapid") or item.url() == URL(c="admin", f="errors") or item.url() == URL(c="default", f="about"):
             item.enabled = False
             item.visible = False
         
@@ -61,15 +61,15 @@ class S3MainMenuLayout(S3NavigationItem):
                         if _href == URL(c="default", f="help"):
                             src = "/eden/static/themes/SAFIRE/interlinkdesign/img/help.png";
                             title = "Aide";
-                            _href = ''
+                            _href = '#'
                         if _href == URL(c="event", f="more"):
                             src = "/eden/static/themes/SAFIRE/interlinkdesign/img/more.png";
                             title = "Plus d'option";
-                            _href = ''
+                            _href = '#'
                         if _href == URL(c="default", f="index"):
                             print("user already")
                             src = "/eden/static/themes/SAFIRE/interlinkdesign/img/lang5050.png";
-                            _href = ''
+                            _href = '#'
                         if _href is  None:
                             src = "/eden/static/themes/SAFIRE/interlinkdesign/img/user.png";
                         # item_url = item.url()
